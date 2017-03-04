@@ -1,0 +1,10 @@
+# IDE
+.idea
+cmake-build-debug
+cmake-build-release
+
+# Google Test Framework
+**/googletest-master/**
+!**/googletest-master/PLACEHOLDER
+
+*.bmp
