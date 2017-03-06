@@ -9,15 +9,15 @@
 
 class DSU {
 public:
-    void add_set(unsigned s);
+    void add_set(size_t s);
 
-    unsigned find_set(unsigned s);
+    size_t find_set(size_t s);
 
-    void unite_sets(unsigned s1, unsigned s2);
+    void unite_sets(size_t s1, size_t s2);
 
 private:
-    std::vector<unsigned> parents;
-    std::vector<unsigned> ranks;
+    std::vector<size_t> parents;
+    std::vector<size_t> ranks;
 };
 
 

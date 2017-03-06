@@ -7,6 +7,8 @@
 #include <algorithm>
 #include "RadixTranslation.h"
 
+using std::reverse;
+
 static void long_number_fix(LongNumber &a, unsigned base) {
     for (size_t i = 0; i < a.size() && !(i == a.size() - 1 && a.at(i) < base); ++i) {
         if (i >= a.size() - 1) {

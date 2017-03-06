@@ -6,7 +6,7 @@
 
 using namespace std;
 
-void DSU::add_set(unsigned s) {
+void DSU::add_set(size_t s) {
     if (s >= parents.size()) {
         parents.resize(s + 1);
         ranks.resize(s + 1);
@@ -15,14 +15,14 @@ void DSU::add_set(unsigned s) {
     ranks.at(s) = 0;
 }
 
-unsigned DSU::find_set(unsigned s) {
+size_t DSU::find_set(size_t s) {
     if (s == parents.at(s)) {
         return s;
     }
     return parents.at(s) = find_set(parents.at(s));
 }
 
-void DSU::unite_sets(unsigned s1, unsigned s2) {
+void DSU::unite_sets(size_t s1, size_t s2) {
     s1 = find_set(s1);
     s2 = find_set(s2);
     if (s1 != s2) {

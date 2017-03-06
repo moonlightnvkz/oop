@@ -5,4 +5,7 @@
 #pragma once
 #include <string>
 
-bool median_filter(std::string input, unsigned aperture_lin_sz, unsigned threshold, std::string output);
+bool median_filter(const std::string &input,
+                   unsigned aperture_lin_sz,
+                   unsigned threshold,
+                   const std::string &output);

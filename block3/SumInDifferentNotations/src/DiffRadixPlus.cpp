@@ -7,7 +7,7 @@
 #include "DiffRadixPlus.h"
 #include "RadixTranslation.h"
 
-using namespace std;
+using std::reverse;
 
 LongNumber my_plus(LongNumber a, unsigned baseA,
                 LongNumber b, unsigned baseB, unsigned baseResult) {
@@ -17,7 +17,7 @@ LongNumber my_plus(LongNumber a, unsigned baseA,
     bool carry = false;
     reverse(a.begin(), a.end());
     reverse(b.begin(), b.end());
-    for (size_t i = 0; i < max(a.size(), b.size()) || carry; ++i) {
+    for (size_t i = 0; i < std::max(a.size(), b.size()) || carry; ++i) {
         if (i == a.size()) {
             a.push_back(0);
         }
