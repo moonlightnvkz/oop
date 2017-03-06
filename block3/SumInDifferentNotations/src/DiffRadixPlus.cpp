@@ -3,6 +3,7 @@
 //
 
 #include <cstddef>
+#include <algorithm>
 #include "DiffRadixPlus.h"
 #include "RadixTranslation.h"
 
@@ -14,6 +15,8 @@ LongNumber my_plus(LongNumber a, unsigned baseA,
     b = translate_to_dec(b, baseB);
     const int baseDec = 10;
     bool carry = false;
+    reverse(a.begin(), a.end());
+    reverse(b.begin(), b.end());
     for (size_t i = 0; i < max(a.size(), b.size()) || carry; ++i) {
         if (i == a.size()) {
             a.push_back(0);
@@ -24,6 +27,6 @@ LongNumber my_plus(LongNumber a, unsigned baseA,
             a.at(i) -= baseDec;
         }
     }
-
+    reverse(a.begin(), a.end());
     return translate_from_dec(a, baseResult);
 }

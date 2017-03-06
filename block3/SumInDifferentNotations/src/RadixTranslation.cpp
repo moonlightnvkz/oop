@@ -35,6 +35,7 @@ static void long_number_mult(LongNumber &a, int b, unsigned base) {
 /// \return remainder of division
 static int long_number_div(LongNumber &a, int b, unsigned base) {
     int carry = 0;
+
     for (auto i = a.rbegin(); i != a.rend(); ++i) {
         int curr = *i + carry * base;
         *i = curr / b;
@@ -58,6 +59,7 @@ LongNumber translate_to_dec(LongNumber number, unsigned base) {
 LongNumber translate_from_dec(LongNumber number, unsigned base) {
     assert(base > 1);
     LongNumber res;
+    reverse(number.begin(), number.end());
     while (!(number.size() <= 1 && number.at(0) == 0)) {
         res.push_back(long_number_div(number, base, 10));
     };
