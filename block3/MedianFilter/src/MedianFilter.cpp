@@ -5,66 +5,83 @@
 #include <vector>
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgcodecs.hpp>
-#include <opencv2/imgcodecs/imgcodecs_c.h>
 #include "MedianFilter.h"
+
+#define GET_PIXEL(image, r, c, ch, channels) (image.data[(r * image.cols + c) * channels + ch])
 
 using std::vector;
 using std::string;
 
-template <typename T>
-const T& clamp(const T &v, const T &lo, const T &hi) {
+const int& clamp(const int &v, const int &lo, const int &hi) {
     return v < lo ? lo : v > hi ? hi : v;
 }
 
-vector<cv::Vec3b> get_aperture(const cv::Mat &image, int row, int col, int aperture_lin_sz) {
-    vector<cv::Vec3b> pixels;
-    int i_l = row - aperture_lin_sz / 2;
-    int i_r = row + aperture_lin_sz / 2;
-    int j_l = col - aperture_lin_sz / 2;
-    int j_r = col + aperture_lin_sz / 2;
+vector<uchar> get_aperture(const cv::Mat &image, int row, int col, int channel, int aperture_half_sz) {
+    vector<uchar> pixels;
+    int channels = image.channels();
+    int i_l = row - aperture_half_sz;
+    int i_r = row + aperture_half_sz;
+    int j_l = col - aperture_half_sz;
+    int j_r = col + aperture_half_sz;
     for (    int i = i_l; i <= i_r; ++i) {
         for (int j = j_l; j <= j_r; ++j) {
             int r = clamp(i, 0, image.rows);
             int c = clamp(j, 0, image.cols);
-            pixels.push_back(image.at<cv::Vec3b>(r, c));
+            pixels.push_back(GET_PIXEL(image, r, c, channel, channels));
         }
     }
     return pixels;
 }
 
-cv::Vec3b get_median(vector<cv::Vec3b> &aperture, int channels, cv::Vec3b central_pixel, unsigned threshold) {
+uchar get_median(vector<uchar> &aperture, uchar central_pixel, unsigned threshold) {
     size_t size = aperture.size();
-    for (unsigned channel = 0; channel < channels; ++channel) {
-        std::sort(aperture.begin(), aperture.end(), [=](cv::Vec3b a, cv::Vec3b b) {
-            return a.val[channel] < b.val[channel];
-        });
+    std::sort(aperture.begin(), aperture.end(), [](const uchar &a, const uchar &b) {
+        return a < b;
+    });
 
-        cv::Vec3b median = aperture.at(size / 2);
+    size_t m = size / 2;
+    uchar median = uchar(aperture.at(m);
 
-        if (aperture.at(size / 2 - threshold).val[channel] > central_pixel.val[channel] ||
-            aperture.at(size / 2 + threshold).val[channel] < central_pixel.val[channel]) {
-            central_pixel.val[channel] = median.val[channel];
-        }
+    if (aperture.at(m - threshold) > central_pixel ||
+        aperture.at(m + threshold) < central_pixel) {
+        central_pixel = median;
     }
     return central_pixel;
 }
 
 bool median_filter(const std::string &input, unsigned aperture_lin_sz, unsigned threshold, const std::string &output) {
-    assert(threshold <= aperture_lin_sz * aperture_lin_sz / 2);
-
-    cv::Mat image = cv::imread(input, CV_LOAD_IMAGE_COLOR);
-    if (!image.data) {
+    if (threshold > aperture_lin_sz * aperture_lin_sz / 2) {
         return false;
     }
 
-    for (unsigned r = 0; r < image.rows; ++r) {
-        for (unsigned c = 0; c < image.cols; ++c) {
-            vector<cv::Vec3b> aperture = get_aperture(image, r, c, aperture_lin_sz);
-            image.at<cv::Vec3b>(r, c) = get_median(aperture, image.channels(), image.at<cv::Vec3b>(r, c), threshold);
-        }
+    cv::Mat image = cv::imread(input);
+    cv::Mat out(image.rows, image.cols, image.type());
+
+    if (!median_filter(image, aperture_lin_sz, threshold, out)) {
+        return false;
     }
 
-    cv::imwrite(output, image);
-    image.release();
+    cv::imwrite(output, out);
+    return true;
+}
+
+bool median_filter(const cv::Mat &image, unsigned aperture_lin_sz, unsigned threshold, cv::Mat &output) {
+    if (threshold > aperture_lin_sz * aperture_lin_sz / 2) {
+        return false;
+    }
+    if (!image.data) {
+        return false;
+    }
+    unsigned aperture_half_sz = aperture_lin_sz / 2;
+    int channels = image.channels();
+    for (int r = 0; r < image.rows; ++r) {
+        for (int c = 0; c < image.cols; ++c) {
+            for (int ch = 0; ch < channels; ++ch) {
+                vector<uchar> aperture = get_aperture(image, r, c, ch, aperture_half_sz);
+                GET_PIXEL(output, r, c, ch, channels) =
+                        get_median(aperture, GET_PIXEL(image, r, c, ch, channels), threshold);
+            }
+        }
+    }
     return true;
 }
