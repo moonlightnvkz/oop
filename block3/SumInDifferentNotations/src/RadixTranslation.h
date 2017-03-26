@@ -6,8 +6,10 @@
 
 #include <vector>
 
-typedef std::vector<int> LongNumber;
+namespace RadixTranslation {
+    typedef std::vector<int> LongNumber;
 
-LongNumber translate_to_dec(LongNumber number, unsigned base);
+    LongNumber translate_to_dec(const LongNumber &number, unsigned base);
 
-LongNumber translate_from_dec(LongNumber number, unsigned base);
+    LongNumber translate_from_dec(LongNumber number, unsigned base);
+}

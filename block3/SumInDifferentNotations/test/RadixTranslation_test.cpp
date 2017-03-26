@@ -4,9 +4,10 @@
 #include <gtest/gtest.h>
 #include "../src/RadixTranslation.h"
 
-using namespace std;
+using namespace RadixTranslation;
+using std::make_tuple;
 
-class RadixTranslation_test : public testing::TestWithParam<tuple<LongNumber, unsigned, LongNumber>> {
+class RadixTranslation_test : public testing::TestWithParam<std::tuple<LongNumber, unsigned, LongNumber>> {
 public:
     LongNumber res;
 };
@@ -14,7 +15,7 @@ public:
 class Translation_to_Dec_test : public RadixTranslation_test {
 public:
     virtual void SetUp() override {
-        res = translate_to_dec(get<0>(GetParam()), get<1>(GetParam()));
+        res = translate_to_dec(std::get<0>(GetParam()), std::get<1>(GetParam()));
     }
 
     virtual void TearDown() override {
@@ -25,7 +26,7 @@ public:
 class Translation_from_Dec_test : public RadixTranslation_test {
 public:
     virtual void SetUp() override {
-        res = translate_from_dec(get<0>(GetParam()), get<1>(GetParam()));
+        res = translate_from_dec(std::get<0>(GetParam()), std::get<1>(GetParam()));
     }
 
     virtual void TearDown() override {
@@ -33,7 +34,7 @@ public:
     }
 };
 
-tuple<LongNumber, unsigned, LongNumber> to_dec_params[] = {
+std::tuple<LongNumber, unsigned, LongNumber> to_dec_params[] = {
         make_tuple(LongNumber({ 0 }),                     2, LongNumber({ 0 })),
         make_tuple(LongNumber({ 1 }),                     2, LongNumber({ 1 })),
         make_tuple(LongNumber({ 0,1 }),                   2, LongNumber({ 1 })),
@@ -50,12 +51,12 @@ tuple<LongNumber, unsigned, LongNumber> to_dec_params[] = {
 };
 
 TEST_P(Translation_to_Dec_test, Test_to_Dec) {
-    EXPECT_EQ(res,get<2>(GetParam()));
+    EXPECT_EQ(res, std::get<2>(GetParam()));
 }
 
 INSTANTIATE_TEST_CASE_P(Translation_to_Dec_test, Translation_to_Dec_test, testing::ValuesIn(to_dec_params));
 
-tuple<LongNumber, unsigned, LongNumber> from_dec_params[] = {
+std::tuple<LongNumber, unsigned, LongNumber> from_dec_params[] = {
         make_tuple(LongNumber({ 0 }),                     2, LongNumber({ 0 })),
         make_tuple(LongNumber({ 1 }),                     2, LongNumber({ 1 })),
         make_tuple(LongNumber({ 0,1 }),                   2, LongNumber({ 1 })),
@@ -72,7 +73,7 @@ tuple<LongNumber, unsigned, LongNumber> from_dec_params[] = {
 };
 
 TEST_P(Translation_from_Dec_test, Translation_from_Dec_test) {
-    EXPECT_EQ(res, get<2>(GetParam()));
+    EXPECT_EQ(res, std::get<2>(GetParam()));
 }
 
 INSTANTIATE_TEST_CASE_P(Translation_from_Dec_test, Translation_from_Dec_test, testing::ValuesIn(from_dec_params));

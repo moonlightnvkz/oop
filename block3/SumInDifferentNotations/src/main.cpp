@@ -1,17 +1,24 @@
 #include <iostream>
+#include <fstream>
 #include "RadixTranslation.h"
 #include "DiffRadixPlus.h"
 
-using namespace std;
-
-#define CODE(s) (s - 'A' + 10)
+using namespace DiffRadixPlus;
 
 int main() {
-    LongNumber a = {15, 15};
-    LongNumber b = {CODE('H'), CODE('E'), CODE('L'), CODE('L'), CODE('O')};
-    LongNumber res = my_plus(a, 16, b, 36, 2);
+    LongNumber a, b;
+    unsigned baseA, baseB, baseResult;
+    std::ifstream is("input");
+    if (!DiffRadixPlus::read(is, a, baseA, b, baseB, baseResult)) {
+        return 1;
+    }
+    LongNumber res = DiffRadixPlus::my_plus(a, baseA, b, baseB, baseResult);
     for (auto i : res) {
-        cout << i;
+        std::cout << i;
+    }
+    std::ofstream of("output");
+    if (!DiffRadixPlus::write(of, res, baseResult)) {
+        return 2;
     }
     return 0;
 }

@@ -25,4 +25,4 @@ typedef std::vector<weighted_edge_t> weighted_edges_array_t;
 weighted_edges_array_t build(const points_array_t& points);
 
 // Путь в заданном графе
-weighted_edges_array_t build(size_t points_amount, weighted_edges_array_t &edges);
+weighted_edges_array_t build(const size_t points_amount, weighted_edges_array_t &edges);

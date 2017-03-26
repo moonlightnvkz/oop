@@ -18,7 +18,7 @@ int main() {
     }
 
     weighted_edges_array_t res = build(points);
-    for (auto point : res) {
+    for (const auto& point : res) {
         out << point.second.first << " - " << point.second.second << endl;
     }
     return 0;

@@ -6,7 +6,7 @@
 
 using namespace std;
 
-void DSU::add_set(size_t s) {
+void DSU::add_set(const size_t s) {
     if (s >= parents.size()) {
         parents.resize(s + 1);
         ranks.resize(s + 1);
@@ -15,7 +15,7 @@ void DSU::add_set(size_t s) {
     ranks.at(s) = 0;
 }
 
-size_t DSU::find_set(size_t s) {
+size_t DSU::find_set(const size_t s) {
     if (s == parents.at(s)) {
         return s;
     }

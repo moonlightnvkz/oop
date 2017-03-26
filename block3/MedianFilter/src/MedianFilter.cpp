@@ -73,7 +73,7 @@ bool median_filter(const cv::Mat &image, unsigned aperture_lin_sz, unsigned thre
         return false;
     }
     unsigned aperture_half_sz = aperture_lin_sz / 2;
-    int channels = image.channels();
+    const int channels = image.channels();
     for (int r = 0; r < image.rows; ++r) {
         for (int c = 0; c < image.cols; ++c) {
             for (int ch = 0; ch < channels; ++ch) {
