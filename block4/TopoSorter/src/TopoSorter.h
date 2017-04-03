@@ -6,37 +6,23 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <istream>
 
 class TopoSorter {
 public:
     using Name = std::string;
     using Dependencies = std::vector<std::string>;
+    using Node = std::pair<Name, Dependencies>;
 
     TopoSorter() { }
 
-    TopoSorter(const std::vector<std::pair<Name, Dependencies>> &nodes);
+    TopoSorter(std::istream &is);
 
-    TopoSorter(const TopoSorter &that) {
-        graph = that.graph;
-    }
-
-    TopoSorter(TopoSorter &&that) noexcept {
-        graph = std::move(that.graph);
-    }
+    TopoSorter(const std::vector<Node> &nodes);
 
     ~TopoSorter() { }
 
-    TopoSorter &operator=(const TopoSorter &that) {
-        graph = that.graph;
-        return *this;
-    }
-
-    TopoSorter &operator=(TopoSorter &&that) noexcept {
-        graph = std::move(that.graph);
-        return *this;
-    }
-
-    void add_node(const std::pair<Name, Dependencies> & node);
+    void add_node(const Node &node);
 
     std::vector<std::string> sort();
 

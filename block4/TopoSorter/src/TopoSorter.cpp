@@ -3,6 +3,14 @@
 //
 #include <algorithm>
 #include "TopoSorter.h"
+#include "TopoSorterParser.h"
+
+TopoSorter::TopoSorter(std::istream &is) {
+    const auto nodes = TopoSorterParser::parse(is);
+    for (const auto &node : nodes) {
+        add_node(node);
+    }
+}
 
 TopoSorter::TopoSorter(const std::vector<std::pair<TopoSorter::Name, TopoSorter::Dependencies>> &nodes) {
     for (const auto &node : nodes) {
@@ -13,7 +21,7 @@ TopoSorter::TopoSorter(const std::vector<std::pair<TopoSorter::Name, TopoSorter:
 void TopoSorter::add_node(const std::pair<TopoSorter::Name, TopoSorter::Dependencies> &node) {
     auto &n = graph[node.first];
     n.first = Colors::White;
-    n.second = node.second;
+    n.second.insert(n.second.end(), node.second.begin(), node.second.end());
     for (const auto &d : node.second) {
         auto it = graph.find(d);
         if (it == graph.end()) {
@@ -34,6 +42,7 @@ std::vector<std::string> TopoSorter::sort() {
             return { };
         }
     }
+    std::reverse(res.begin(), res.end());
     return res;
 }
 

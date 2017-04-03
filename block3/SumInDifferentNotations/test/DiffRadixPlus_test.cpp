@@ -46,6 +46,7 @@ public:
     }
 
     std::stringstream ss;
+
     LongNumber A;
 
     unsigned baseA;
@@ -81,26 +82,22 @@ using Param_t_plus = std::tuple<const LongNumber, const unsigned,
 
 class DiffRadixPlus_plus_test : public testing::TestWithParam<Param_t_plus> {
 public:
-    virtual void SetUp() override {
+    virtual void SetUp() override { }
 
-    }
-
-    virtual void TearDown() override {
-
-    }
+    virtual void TearDown() override { }
 };
 
 std::vector<Param_t_read> generate_params_read() {
     constexpr unsigned long  Seed = 18471957190;
     constexpr unsigned TestsAmount = 40;
     std::mt19937 mt(Seed);
-    std::uniform_int_distribution<int> gen(-100, 100);
+    std::uniform_int_distribution<int> gen(-10, 35);
 
     std::vector<Param_t_read> params;
     for (unsigned i = 0; i < TestsAmount; ++i) {
         params.push_back({});
         for (unsigned j = 0; j < 2; ++j) {  // we need 2 pairs LongNumber - base
-            size_t size = size_t(std::abs(gen(mt)));
+            const size_t size = size_t(std::abs(gen(mt)));
             LongNumber ln;
             for (size_t s = 0; s < size; ++s) {
                 int digit = gen(mt);
@@ -136,12 +133,12 @@ TEST_P(DiffRadixPlus_read_test, Read_Test) {
         exp_fail = true;
     }
     for (const auto &i : exp_A) {
-        if (i < 0 || i >= 36) {
+        if (i < 0) {
             exp_fail = true;
         }
     }
     for (const auto &i : exp_B) {
-        if (i < 0 || i >= 36) {
+        if (i < 0) {
             exp_fail = true;
         }
     }
@@ -167,7 +164,7 @@ std::vector<Param_t_write> generate_params_write() {
     constexpr unsigned long  Seed = 18471957190;
     constexpr unsigned TestsAmount = 40;
     std::mt19937 mt(Seed);
-    std::uniform_int_distribution<int> gen(0, 35);
+    std::uniform_int_distribution<int> gen(-10, 40);
 
     std::vector<Param_t_write> params;
     for (unsigned i = 0; i < TestsAmount; ++i) {
@@ -185,7 +182,9 @@ std::vector<Param_t_write> generate_params_write() {
 
 TEST_P(DiffRadixPlus_write_test, Write_Test) {
     using sreg_iter = std::sregex_token_iterator;
-    std::regex re("(\\s*:\\s*\")|(\"\\s*)");
+    std::regex re("(\\s*:\\s*)");   // ": "
+    std::regex re_digits("\\s*,\\s*");
+
     std::string line;
     std::getline(os, line);
     std::vector<std::string> regex_res = {
@@ -194,19 +193,37 @@ TEST_P(DiffRadixPlus_write_test, Write_Test) {
     const Param_t_write &param = GetParam();
     const LongNumber &ln = std::get<0>(param);
     const unsigned base = std::get<1>(param);
-
-    EXPECT_EQ(regex_res.size(), 2) << "Output differs from template";
+    int base_res = -1;
+    ASSERT_NO_THROW(base_res = std::stoi(regex_res[0]));
+    EXPECT_EQ(base_res, base);
+    EXPECT_GT(regex_res.size(), 1) << "Output differs from the template";
 
     ASSERT_NO_THROW(EXPECT_EQ(base, std::stoi(regex_res[0]))) << "Written base is not a number";
 
-    ASSERT_EQ(regex_res[1].size(), ln.size());
-    for (size_t i = 0; i < ln.size(); ++i) {
-        if (std::isupper(regex_res[1][i])) {
-            EXPECT_EQ(ln[i], regex_res[1][i] - 'A' + 10);
-        } else if (std::isdigit(regex_res[1][i])) {
-            EXPECT_EQ(ln[i], regex_res[1][i] - '0');
-        } else {
-            FAIL() << "Symbol is neither upper nor digit" << regex_res[1];
+    if (regex_res[1].at(0) == '"') {
+        EXPECT_TRUE(regex_res[1].back() == '"');
+
+        size_t ln_size = ln.size();
+        ASSERT_EQ(regex_res[1].size() - 2, ln_size);
+        for (size_t i = 0; i < ln_size; ++i) {
+            if (std::isupper(regex_res[1][i])) {
+                EXPECT_EQ(ln[i], regex_res[1][i] - 'A' + 10);
+            } else if (std::isdigit(regex_res[1][i])) {
+                EXPECT_EQ(ln[i], regex_res[1][i] - '0');
+            } else {
+                FAIL() << "Symbol is neither upper nor digit " << regex_res[1] << " " << base;
+            }
+        }
+    } else {
+        std::vector<std::string> digits{
+                sreg_iter(regex_res[1].begin(), regex_res[1].end(), re_digits, -1), sreg_iter()
+        };
+        size_t digits_size = digits.size();
+        ASSERT_EQ(digits_size, ln.size());
+        for (size_t i = 0; i < digits_size; ++i) {
+                int digit = 0;
+                ASSERT_NO_THROW(digit = std::stoi(digits[i]));
+                EXPECT_EQ(digit, ln[i]);
         }
     }
 }
