@@ -10,9 +10,12 @@ void DSU::add_set(const size_t s) {
     if (s >= parents.size()) {
         parents.resize(s + 1);
         ranks.resize(s + 1);
+        sizes.resize(s + 1);
     }
     parents.at(s) = s;
     ranks.at(s) = 0;
+    sizes.at(s) = 1;
+    ++num;
 }
 
 size_t DSU::find_set(const size_t s) {
@@ -30,8 +33,10 @@ void DSU::unite_sets(size_t s1, size_t s2) {
             swap(s1, s2);
         }
         parents.at(s2) = s1;
+        sizes.at(s1) += sizes.at(s2);
         if (ranks.at(s1) == ranks.at(s2)) {
             ++ranks.at(s1);
         }
     }
+    --num;
 }

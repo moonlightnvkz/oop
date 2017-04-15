@@ -11,6 +11,6 @@ int main() {
     ifstream in("input");
     in >> input >> aperture >> threshold >> output;
 
-    median_filter(input, aperture, threshold, output);
+    MedianFilter::median_filter(input, aperture, threshold, output);
     return 0;
 }

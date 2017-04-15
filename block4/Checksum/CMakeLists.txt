@@ -3,5 +3,5 @@ project(Checksum)
 
 set(CMAKE_CXX_STANDARD 14)
 
-set(SOURCE_FILES src/main.cpp src/Checksum.cpp src/Checksum.h)
+set(SOURCE_FILES src/main.cpp src/Checksum.cpp src/Checksum.h src/ArgumentsParser.cpp src/ArgumentsParser.h)
 add_executable(Checksum ${SOURCE_FILES})

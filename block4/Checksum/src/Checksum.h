@@ -4,13 +4,17 @@
 
 #pragma once
 
+#include <cstdint>
+#include <istream>
+#include <vector>
+
 class Checksum {
 public:
-    Checksum() {};
-    ~Checksum() {};
+    Checksum() = delete;
 
-private:
-    long
+    static uint16_t calc_crc16(std::istream &is);
+
+    static bool check_crc16(std::istream &is, uint16_t expected);
 };
 
 
