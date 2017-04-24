@@ -10,10 +10,9 @@
 
 class BalancedHistogramThresholder {
 public:
-    std::vector<unsigned>::const_iterator get_threshold(const std::vector<unsigned> &hist);
+    BalancedHistogramThresholder() = delete;
 
-    unsigned get_weight(std::vector<unsigned>::const_iterator begin,
-                        std::vector<unsigned>::const_iterator end);
+    static unsigned get_threshold(const std::vector<unsigned> &hist);
 };
 
 

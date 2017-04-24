@@ -2,15 +2,17 @@
 // Created by moonlightnvkz on 09.04.17.
 //
 
+#include <numeric>
+#include <functional>
 #include "BalancedHistogramThresholder.h"
 
-std::vector<unsigned>::const_iterator
-BalancedHistogramThresholder::get_threshold(const std::vector<unsigned> &hist) {
+unsigned BalancedHistogramThresholder::get_threshold(const std::vector<unsigned> &hist) {
     auto itl = hist.begin();
     auto itr = hist.end() - 1;
     auto m = itl + (itr - itl) / 2;
-    unsigned wl = get_weight(hist.begin(), m);
-    unsigned wr = get_weight(m + 1, hist.end());
+
+    unsigned wl = std::accumulate(hist.begin(), m, unsigned(0), std::plus<unsigned>());
+    unsigned wr = std::accumulate(m + 1, hist.end(), unsigned(0), std::plus<unsigned>());
 
     while (itl <= itr) {
         if (wr > wl) {
@@ -27,14 +29,5 @@ BalancedHistogramThresholder::get_threshold(const std::vector<unsigned> &hist) {
             }
         }
     }
-    return m;
-}
-
-unsigned BalancedHistogramThresholder::get_weight(std::vector<unsigned>::const_iterator begin,
-                                                  std::vector<unsigned>::const_iterator end) {
-    unsigned res = 0;
-    while (begin != end) {
-        res += *begin++;
-    }
-    return res;
+    return static_cast<unsigned>(std::distance(hist.begin(), m));
 }

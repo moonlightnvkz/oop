@@ -5,30 +5,34 @@
 #pragma once
 
 
-#include <cstddef>
 #include <opencv2/core/mat.hpp>
-#include <limits>
 
-namespace BackRem {
-    class WrongChannelsAmountException : public std::exception {
-    public:
-        virtual ~WrongChannelsAmountException() override {};
+class BackgroundRemover {
+public:
+    BackgroundRemover(size_t sensitivity, double sigma,
+                      int area_size = 0, unsigned kernel = 4);
 
-        virtual const char *what() const noexcept override {
-            return std::exception::what();
-        }
-    };
+    cv::Mat remove_background(const cv::Mat &img) throw(std::exception);
 
-    class BackgroundRemover {
-    public:
-        BackgroundRemover(size_t sensitivity, double sigma,
-                          int kernel = 4, int area_size = 0);
+    double sigma() const;
 
-        cv::Mat remove_background(const cv::Mat &img);
+    void sigma(double _sigma);
 
-        double sigma;
-        size_t sensitivity;
-        int area_size;
-        int kernel;
-    };
-}
+    size_t sensitivity() const;
+
+    void sensitivity(size_t _sensitivity);
+
+    int area_size() const;
+
+    void area_size(int _area_size);
+
+    unsigned kernel() const;
+
+    void kernel(unsigned _kernel);
+
+private:
+    double _sigma;
+    size_t _sensitivity;
+    int _area_size;
+    unsigned _kernel;
+};

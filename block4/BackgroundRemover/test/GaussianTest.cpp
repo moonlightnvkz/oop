@@ -34,27 +34,30 @@ static int draw_random_lines(cv::Mat &image, cv::RNG &rng)
     return 0;
 }
 
+static double get_standard_deviation(const cv::Mat &img, const cv::Mat &sample) {
+    double error = 0;
+    int size = img.rows * img.cols * img.channels();
+    for (int i = 0; i < size; ++i) {
+        error += (img.data[i] - sample.data[i]) * (img.data[i] - sample.data[i]);
+    }
+    error /= size;
+    error = sqrt(error);
+    return error;
+}
+
 TEST(Gaussian__Test, Gaussian__Test_G_Test) {
     cv::Mat image = cv::Mat::zeros(500, 500, CV_8UC3 );
     cv::RNG rng(124815714);
     draw_random_lines(image, rng);
-
     cv::Mat sample_cv(image.clone());
+
     GaussianFilter filter(0.5, 5);
-    auto kernel = filter.get_kernel();
+    auto kernel = filter.kernel();
     filter.apply(image, GaussianFilter::Type::Vertical);
     filter.apply(image, GaussianFilter::Type::Horizontal);
 
-    cv::GaussianBlur(sample_cv, sample_cv, cv::Size(0, 5), 0.5, 0.5);
-    cv::GaussianBlur(sample_cv, sample_cv, cv::Size(5, 0), 0.5, 0.5);
+    cv::GaussianBlur(sample_cv, sample_cv, cv::Size(5, 5), 0.5, 0.5);
 
-    cv::Mat diff = image != sample_cv;
-    int count = 0;
-    int size = image.rows * image.cols * image.channels();
-    for (int i = 0; i < size; ++i) {
-        if (image.data[i] != sample_cv.data[i]) {
-            ++count;
-        }
-    }
-    EXPECT_EQ(count, 0);
+    FAIL() << "Standard deviation from the model: "
+           << get_standard_deviation(image, sample_cv);
 }

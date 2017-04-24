@@ -11,7 +11,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wformat-nonliteral -Wmissing-include-di
 set(SOURCE_FILES
         src/GaussianFilter.cpp src/GaussianFilter.h
         src/BackgroundRemover.cpp src/BackgroundRemover.h
-        src/LuminosityHistogram.cpp src/LuminosityHistogram.h
+        src/IntensityHistogramCalculator.cpp src/IntensityHistogramCalculator.h
         src/BalancedHistogramThresholder.cpp src/BalancedHistogramThresholder.h
         )
 
@@ -19,7 +19,7 @@ set (CMAKE_AUTOMOC ON)
 set (CMAKE_AUTOUIC ON)
 set (CMAKE_INCLUDE_CURRENT_DIR ON)
 
-set (GUI_SOURCES src/MainWindow.cpp src/MainWindow.h src/mainwindow.ui)
+set (GUI_SOURCES src/MainWindow.cpp src/MainWindow.h src/mainwindow.ui src/WrongChannelsAmountException.h)
 
 add_executable(BackgroundRemover_exe src/main.cpp ${SOURCE_FILES} ${GUI_SOURCES} test/GaussianTest.cpp)
 add_library(BackgroundRemover_lib SHARED ${SOURCE_FILES})

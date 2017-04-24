@@ -12,7 +12,7 @@ class Checksum {
 public:
     Checksum() = delete;
 
-    static uint16_t calc_crc16(std::istream &is);
+    static bool calc_crc16(std::istream &is, uint16_t &checksum);
 
     static bool check_crc16(std::istream &is, uint16_t expected);
 };

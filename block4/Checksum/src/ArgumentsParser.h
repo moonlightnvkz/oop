@@ -22,7 +22,7 @@ public:
     ArgumentsParser(std::unordered_set<std::string> &&keys) : keys(std::move(keys)) { };
 
 
-    std::vector<std::pair<Key, Values>> parse(const int argc, char *argv[]);
+    std::vector<std::pair<Key, Values>> parse(std::istream &is);
 
 private:
     std::unordered_set<std::string> keys;

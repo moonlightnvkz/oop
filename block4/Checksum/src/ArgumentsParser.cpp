@@ -11,21 +11,16 @@ ArgumentsParser::ArgumentsParser(const std::vector<std::string> &keys) {
     }
 }
 
-std::vector<std::pair<Key, Values>> ArgumentsParser::parse(const int argc, char *argv[]) {
+std::vector<std::pair<Key, Values>> ArgumentsParser::parse(std::istream &is) {
     std::vector<std::pair<Key, Values>> res;
-    // skip program name
     std::string value;
     bool key_read = false;
-    for (int i = 1; i < argc; ++i) {
-        std::stringstream ss(argv[i]);
-        ss >> value;
+    // skip program name
+    while(is >> value) {
         if (keys.find(value) != keys.end()) {
             key_read = true;
             res.push_back({value, {}});
-        } else {
-            if (!key_read) {
-                return {};
-            }
+        } else if (key_read){
             res.back().second.push_back(value);
         }
     }

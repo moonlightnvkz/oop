@@ -48,7 +48,7 @@ bool MainWindow::saveFile(const QString &fileName) {
     size_t t = static_cast<size_t>(ui->sensitivity->value());
     int a = ui->area_ignored->value();
     int k = ui->kernel_size->value() * 2 - 1;
-    BackRem::BackgroundRemover remover(t, s, k, a);
+    BackgroundRemover remover(t, s, k, a);
     cv::Mat output = remover.remove_background(img);
     cv::imwrite(fileName.toStdString(), output);
     return true;
@@ -115,7 +115,7 @@ void MainWindow::remove_background()
     int a = ui->area_ignored->value();
     int k = ui->kernel_size->value() * 2 - 1;
 
-    BackRem::BackgroundRemover remover(t, s, a, k);
+    BackgroundRemover remover(t, s, a, k);
     cv::Mat output = remover.remove_background(img);
 
     cv::cvtColor(output, output, CV_BGRA2RGBA);

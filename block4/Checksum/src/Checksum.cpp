@@ -4,28 +4,26 @@
 
 #include "Checksum.h"
 
-uint16_t Checksum::calc_crc16(std::istream &is) {
+bool Checksum::calc_crc16(std::istream &is, uint16_t &checksum) {
     const ushort generator = 0x1021;
-    ushort crc = 0;
+    checksum = 0;
 
     char byte;
     while(is >> byte) {
-        crc ^= (byte << 8);
+        checksum ^= (byte << 8);
         for (int i = 0; i < 8; i++) {
-            if ((crc & 0x8000) != 0) {
-                crc = ((crc << 1) ^ generator);
+            if ((checksum & 0x8000) != 0) {
+                checksum = ((checksum << 1) ^ generator);
             }
             else {
-                crc <<= 1;
+                checksum <<= 1;
             }
         }
     }
-    if (!is.eof()) {
-        throw std::ios_base::failure("Failed to read from stream");
-    }
-    return crc;
+    return is.eof();
 }
 
 bool Checksum::check_crc16(std::istream &is, uint16_t expected) {
-    return calc_crc16(is) == expected;
+    uint16_t checksum;
+    return calc_crc16(is, checksum) && checksum == expected;
 }

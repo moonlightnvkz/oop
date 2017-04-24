@@ -10,7 +10,7 @@
 
 class GaussianFilter {
 public:
-    GaussianFilter(double sigma, int size);
+    GaussianFilter(double sigma, unsigned size);
 
     enum class Type {
         Horizontal,
@@ -19,24 +19,21 @@ public:
 
     void apply(cv::Mat &img, Type type);
 
-    double get_sigma() const {
-        return sigma;
+    double sigma() const {
+        return _sigma;
     }
 
-    int get_size() const {
-        return size;
+    unsigned size() const {
+        return static_cast<unsigned>(_kernel.size());
     }
 
-    const std::vector<double> &get_kernel() const {
-        return kernel;
+    const std::vector<double> &kernel() const {
+        return _kernel;
     }
 
 private:
-    double sigma;
-    int size;
-    std::function<double(int)> func;
-
-    std::vector<double> kernel;
+    double _sigma;
+    std::vector<double> _kernel;
 };
 
 
