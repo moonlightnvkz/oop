@@ -8,21 +8,75 @@
 #include "ManifestReader.h"
 #include "ManifestWriter.h"
 
-static void print_help() {
-    std::cout << "Usage: checksum --calc [<file_names>...] or --check <manifest_name>" << std::endl;
-}
+namespace {
+    void print_help() {
+        std::cout << "Usage: checksum --calc [<file_names>...] or --check <manifest_name>" << std::endl;
+    }
 
-static void print_command_line_error() {
-    std::cerr << "Error: incorrect command line" << std::endl;
-    print_help();
-}
+    void print_command_line_error() {
+        std::cerr << "Error: incorrect command line" << std::endl;
+        print_help();
+    }
 
-static std::string get_date_str() {
-    time_t time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-    std::string date = std::ctime(&time);
-    std::replace(date.begin(), date.end(), ' ', '_');
-    std::replace(date.begin(), date.end(), ':', '_');
-    return date;
+    std::string get_date_str() {
+        time_t time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+        std::string date = std::ctime(&time);
+        std::replace(date.begin(), date.end(), ' ', '_');
+        std::replace(date.begin(), date.end(), ':', '_');
+        return date;
+    }
+
+    void process_calc(const std::vector<std::pair<Key, Values>> &args) {
+        Manifest manifest;
+        for (const auto &f : args[0].second) {
+            std::ifstream is(f);
+            if (!is) {
+                std::cerr << "Failed to open file " << f << std::endl;
+                continue;
+            }
+            uint16_t checksum;
+            if (!Checksum::calc_crc16(is, checksum)) {
+                std::cerr << "Failed to calculate checksum for file " << f << std::endl;
+                continue;
+            }
+            manifest.push_back(std::make_pair(f, checksum));
+        }
+        std::ofstream os("manifest_" + get_date_str());
+        if (!ManifestWriter::write(os, manifest)) {
+            std::cerr << "Failed to write file-manifest" << std::endl;
+        }
+    }
+
+    void process_check(const std::vector<std::pair<Key, Values>> &args) {
+        // Only one file-manifest supported
+        if (args[0].second.size() != 1) {
+            print_command_line_error();
+            return;
+        }
+
+        std::ifstream manifest(args[0].second[0]);
+        if (!manifest) {
+            std::cerr << "Failed to open file-manifest" << std::endl;
+            return;
+        }
+
+        Manifest files_to_check;
+        if (!ManifestReader::read(manifest, files_to_check)) {
+            std::cerr << "Failed to read file-manifest" << std::endl;
+            return;
+        }
+
+        for (const auto &to_check : files_to_check) {
+            std::ifstream is(to_check.first);
+            if (!is) {
+                std::cerr << "Failed to open file " << to_check.first << std::endl;
+                continue;
+            }
+            std::cout << to_check.first << ":" << std::boolalpha
+                      << Checksum::check_crc16(is, static_cast<uint16_t>(to_check.second))
+                      << std::endl;
+        }
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -44,52 +98,13 @@ int main(int argc, char *argv[]) {
         print_command_line_error();
         return 0;
     }
+
     if (args[0].first == Calc) {
-        Manifest manifest;
-        for (const auto &f : args[0].second) {
-            std::ifstream is(f);
-            uint16_t checksum;
-            if (!Checksum::calc_crc16(is, checksum)) {
-                std::cerr << "Failed to calculate checksum";
-                return 0;
-            }
-            manifest.push_back(std::make_pair(f, checksum));
-        }
-        std::ofstream os("manifest_" + get_date_str());
-        ManifestWriter::write(os, manifest);
+        process_calc(args);
+    } else if (args[0].first == Check){
+        process_check(args);
     } else {
-        // Only one file-manifest supported
-        if (args[0].second.size() != 1) {
-            print_command_line_error();
-            return 0;
-        }
-        std::ifstream manifest(args[0].second[0]);
-        if (!manifest) {
-            std::cerr << "Failed to open file-manifest" << std::endl;
-            return 0;
-        }
-
-        Manifest files_to_check;
-        if (!ManifestReader::read(manifest, files_to_check)) {
-            std::cerr << "Failed to read file-manifest" << std::endl;
-            return 0;
-        }
-
-        for (const auto &to_check : files_to_check) {
-            std::ifstream file(to_check.first);
-            try {
-                std::cout << to_check.first << ":" << std::boolalpha
-                          << Checksum::check_crc16(file, static_cast<uint16_t>(to_check.second))
-                          << std::endl;
-            } catch (std::exception &e) {
-                std::cerr << e.what();
-                return 0;
-            }
-        }
-        if (!manifest.eof()) {
-            std::cerr << "Error: wrong or corrupted file" << args[0].second[0];
-            return 0;
-        }
+        print_command_line_error();
     }
     return 0;
 }

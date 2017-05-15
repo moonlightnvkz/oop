@@ -32,12 +32,12 @@ public:
 
 static void verify(Param_t res, Param_t expected) {
     ASSERT_EQ(res.size(), expected.size());
-    unsigned long long size = res.size();
-    for (int i = 0; i < size; ++i) {
+    size_t size = res.size();
+    for (size_t i = 0; i < size; ++i) {
         EXPECT_EQ(res[i].first, expected[i].first);
         ASSERT_EQ(res[i].second.size(), expected[i].second.size());
-        unsigned long long values_count = res[i].second.size();
-        for (int j = 0; j < values_count; ++j) {
+        size_t values_count = res[i].second.size();
+        for (size_t j = 0; j < values_count; ++j) {
             EXPECT_EQ(res[i].second[j], expected[i].second[j]);
         }
     }

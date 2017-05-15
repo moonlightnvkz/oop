@@ -14,7 +14,7 @@ bool ManifestReader::read(std::istream &is, Manifest &manifest) {
         std::getline(is, f, '\n');
     }
     if (!is.eof()) {
-        throw false;
+        return false;
     }
     return true;
 }

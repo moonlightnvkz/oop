@@ -21,8 +21,8 @@ public:
 
 static void verify(Manifest res, Manifest expected) {
     ASSERT_EQ(res.size(), expected.size());
-    unsigned long long size = res.size();
-    for (int i = 0; i < size; ++i) {
+    size_t size = res.size();
+    for (size_t i = 0; i < size; ++i) {
         EXPECT_EQ(res[i].first, expected[i].first);
         EXPECT_EQ(res[i].second, expected[i].second);
     }
