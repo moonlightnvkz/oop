@@ -5,19 +5,13 @@
 #include <stdexcept>
 #include "../include/CardContainer.h"
 
-bool CardContainer::push_back(Card &card) {
-    if (is_suitable(card)) {
-        cards.push_back(card);
-        card.set_side(Card::eSide::Face);
+bool CardContainer::push_back(const std::shared_ptr<Card> &card) {
+    if (card == nullptr) {
         return true;
     }
-    return false;
-}
-
-bool CardContainer::push_back(Card &&card) {
     if (is_suitable(card)) {
         cards.push_back(std::move(card));
-        cards.back().set_side(Card::eSide::Face);
+        card->set_side(Card::eSide::Face);
         return true;
     }
     return false;
@@ -30,22 +24,31 @@ void CardContainer::pop_back() {
     cards.pop_back();
 }
 
-bool CardContainer::is_suitable(const Card &card) {
+bool CardContainer::is_suitable(const std::shared_ptr<Card> &card) const {
     return true;
 }
 
-const Card &CardContainer::peek(size_t idx_from_back) {
+std::shared_ptr<Card> CardContainer::get_card(size_t idx_from_back) const {
     size_t size = cards.size();
-    if (idx_from_back >= size) {
-        throw std::logic_error("There is no cards");
+    if (size == 0) {
+        return nullptr;
     }
-    return cards[size - idx_from_back];
+    if (idx_from_back >= size) {
+        idx_from_back = size - 1;
+    }
+    return cards[size - idx_from_back - 1];
 }
 
-const Card &CardContainer::back() const {
-    if (cards.size() > 0) {
-        return cards.back();
-    } else {
-        throw std::logic_error("There is no cards");
+CardContainer &CardContainer::operator=(const CardContainer &that) {
+    if (this != &that) {
+        this->cards = that.cards;
     }
+    return *this;
+}
+
+CardContainer &CardContainer::operator=(CardContainer &&that) {
+    if (this != &that) {
+        this->cards = that.cards;
+    }
+    return *this;
 }

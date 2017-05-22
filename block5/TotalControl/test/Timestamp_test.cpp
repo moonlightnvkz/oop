@@ -4,7 +4,7 @@
 
 #include <gtest/gtest.h>
 #include <functional>
-#include "../src/Timestamp.h"
+#include "../include/Timestamp.h"
 
 using ReadWriteParam_t = std::pair<Timestamp, const char*>;
 

@@ -12,22 +12,28 @@ CardDeck::CardDeck()
     constexpr const unsigned Amount = 52;
     constexpr const unsigned CPS = 13;  // Cards Per Suit
     for (unsigned i = 0; i < Amount; ++i) {
-        cards.push_back(Card(static_cast<Card::eSuit>(i / CPS),
-                             static_cast<Card::eRank>(i % CPS)));
+        cards.push_back(std::make_shared<Card>(static_cast<Card::eSuit>(i / CPS),
+                                               static_cast<Card::eRank>(i % CPS)));
     }
     std::random_shuffle(cards.begin(), cards.end());
 }
 
 void CardDeck::move_card_to_waste() {
     if (waste == nullptr) {
-        throw std::logic_error("waste in nullptr");
+        throw std::logic_error("waste is nullptr");
     }
-    Card &top = const_cast<Card&>(back());
+    const std::shared_ptr<Card> &top = get_card();
     pop_back();
     waste->push_back(top);
 }
 
-bool CardDeck::push_back(Card &card) {
-    card.set_side(Card::eSide::Back);
-    return CardContainer::push_back(card);
+bool CardDeck::push_back(const std::shared_ptr<Card> &card) {
+    if (card == nullptr) {
+        return true;
+    }
+    if (!CardContainer::push_back(card)) {
+        return false;
+    }
+    cards.back()->set_side(Card::eSide::Back);
+    return true;
 }

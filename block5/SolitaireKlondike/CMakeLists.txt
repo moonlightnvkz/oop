@@ -13,7 +13,7 @@ set(SOURCE_FILES
         include/CardContainer.h
         src/FoundationStack.cpp
         src/TableauStack.cpp include/TableauStack.h
-        src/CardContainer.cpp)
+        src/CardContainer.cpp src/Tableau.cpp)
 
 add_executable(SolitaireKlondike_exe main.cpp)
 add_library(SolitaireKlondike_lib SHARED ${SOURCE_FILES})

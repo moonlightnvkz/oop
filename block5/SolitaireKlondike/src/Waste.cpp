@@ -9,12 +9,18 @@ void Waste::move_card_to_deck() {
     if (size() == 0) {
         return;
     }
-    Card &top = const_cast<Card&>(back());
+    const std::shared_ptr<Card> &top = get_card();
     pop_back();
     deck->push_back(top);
 }
 
-bool Waste::push_back(Card &card) {
-    card.set_side(Card::eSide::Face);
-    return CardContainer::push_back(card);
+bool Waste::push_back(const std::shared_ptr<Card> &card) {
+    if (card == nullptr) {
+        return true;
+    }
+    if (!CardContainer::push_back(card)) {
+        return false;
+    }
+    cards.back()->set_side(Card::eSide::Face);
+    return true;
 }

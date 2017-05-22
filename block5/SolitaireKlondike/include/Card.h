@@ -4,7 +4,6 @@
 
 #pragma once
 
-
 class Card {
 public:
     enum class eSuit {
@@ -37,6 +36,8 @@ public:
 
     Card(eSuit suit, eRank rank, eSide side = eSide::Back) : suit(suit), rank(rank), side(side){ }
 
+    virtual ~Card() { }
+
     eSuit get_suit() const { return suit; }
 
     eRank get_rank() const { return rank; }
@@ -45,9 +46,8 @@ public:
 
     void set_side(eSide side) { this->side = side; }
 
-    void flip() { side = side == eSide::Back ? eSide::Face : eSide::Back; }
-
     bool is_black() const { return suit == eSuit::Clubs || suit == eSuit::Spades; }
+    
 private:
     eSuit suit;
     eRank rank;

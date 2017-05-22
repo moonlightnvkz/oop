@@ -7,11 +7,20 @@
 #include <vector>
 #include "CardContainer.h"
 
-class FoundationStack :public CardContainer{
+class FoundationStack : public CardContainer{
 public:
-    virtual ~FoundationStack() {};
+    FoundationStack () { };
 
-    virtual bool is_suitable(const Card &card) override;
+    ~FoundationStack() { };
+    FoundationStack (const FoundationStack &stack) : CardContainer(stack.cards) { }
+
+    FoundationStack (FoundationStack  &&stack) : CardContainer(std::move(stack.cards)) { }
+
+    FoundationStack &operator=(const FoundationStack &that);
+
+    FoundationStack &operator=(FoundationStack &&that);
+
+    virtual bool is_suitable(const std::shared_ptr<Card> &card) const override;
 };
 
 

@@ -4,19 +4,19 @@
 
 #include <iomanip>
 #include <map>
-#include "Crowd.h"
-#include "User.h"
+#include "../include/Crowd.h"
+#include "../include/User.h"
 
 Crowd::Crowd(const std::string &location, const Timestamp &startTs, const Timestamp &endTs,
-             std::vector<User *> &&users) :
-        _location(location), _startTs(startTs), _endTs(endTs), _users(std::move(users)),
-        _max_calculated(false), _avg_calculated(false) {
+             std::vector<std::shared_ptr<User>> &&users) :
+        location_(location), startTs_(startTs), endTs_(endTs), users_(std::move(users)),
+        max_calculated_(false), avg_calculated_(false) {
 }
 
 Crowd::Crowd(const std::string &location, const Timestamp &startTs, const Timestamp &endTs,
-             const std::vector<User *> &users) :
-        _location(location), _startTs(startTs), _endTs(endTs), _users(users),
-        _max_calculated(false), _avg_calculated(false) {
+             const std::vector<std::shared_ptr<User>> &users) :
+        location_(location), startTs_(startTs), endTs_(endTs), users_(users),
+        max_calculated_(false), avg_calculated_(false) {
 }
 
 std::ostream &operator<<(std::ostream &os, Crowd &crowd) {
@@ -33,11 +33,11 @@ std::ostream &operator<<(std::ostream &os, Crowd &crowd) {
 
 void Crowd::calc_max() {
     std::map<Timestamp, unsigned> timeline;
-    for (const auto &user : _users) {
+    for (const auto &user : users_) {
         timeline[user->startTs()] = 0;
         timeline[user->endTs()] = 0;
     }
-    for (const auto &user : _users) {
+    for (const auto &user : users_) {
         const Timestamp &startTs = user->startTs();
         const Timestamp &endTs = user->endTs();
         auto start_it = timeline.find(startTs);
@@ -45,32 +45,32 @@ void Crowd::calc_max() {
             ++it->second;
         }
     }
-    _max_n = 0;
+    max_n_ = 0;
     for (const auto moment : timeline) {
-        if (moment.second > _max_n) {
-            _max_n = moment.second;
+        if (moment.second > max_n_) {
+            max_n_ = moment.second;
         }
     }
-    _max_calculated = true;
+    max_calculated_ = true;
 }
 
-void Crowd::add_user(User *user) {
-    _users.push_back(user);
-    _avg_calculated = false;
+void Crowd::add_user(std::shared_ptr<User> user) {
+    users_.push_back(user);
+    avg_calculated_ = false;
 }
 
 unsigned int Crowd::max_n() {
-    if (!_max_calculated) {
+    if (!max_calculated_) {
         calc_max();
     }
-    return _max_n;
+    return max_n_;
 }
 
 unsigned int Crowd::avg_n() {
-    if (!_avg_calculated) {
+    if (!avg_calculated_) {
         calc_avg();
     }
-    return _avg_n;
+    return avg_n_;
 }
 
 static const Timestamp& clamp( const Timestamp& v, const Timestamp& lo, const Timestamp& hi)
@@ -79,10 +79,11 @@ static const Timestamp& clamp( const Timestamp& v, const Timestamp& lo, const Ti
 }
 void Crowd::calc_avg() {
     double avg = 0;
-    double period = _endTs - _startTs;
-    for (const auto &user : _users) {
-        avg += (clamp(user->endTs(), _startTs, _endTs) - clamp(user->startTs(), _startTs, _endTs)) / period;
+    double period = endTs_ - startTs_;
+    for (const auto &user : users_) {
+        avg += (clamp(user->endTs(), startTs_, endTs_) - clamp(user->startTs(), startTs_, endTs_)) / period;
     }
-    _avg_n = static_cast<unsigned>(avg);
-    _avg_calculated = true;
+    avg_n_ = static_cast<unsigned>(avg);
+    avg_calculated_ = true;
 }
+

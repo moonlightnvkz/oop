@@ -10,13 +10,24 @@
 
 class Tableau {
 public:
-    Tableau() { };
+    Tableau() { }
 
-    TableauStack &get_stack(size_t i) { return stacks.at(i); }
+    virtual ~Tableau() { }
 
-    void swap_stack(size_t i, size_t j) { std::swap(stacks.at(i), stacks.at(j)); }
+    Tableau(const Tableau &tableau) : stacks(tableau.stacks) { }
+
+    Tableau(Tableau &&tableau) : stacks(std::move(tableau.stacks)) { }
+
+    Tableau(const std::array<TableauStack, 7> &stacks) : stacks(stacks){ }
+
+    Tableau(std::array<TableauStack, 7> &&stacks) : stacks(std::move(stacks)){ }
+
+    TableauStack &stack(size_t i) { return stacks.at(i); }
+
+    Tableau &operator=(const Tableau &that);
+
+    Tableau &operator=(const Tableau &&that);
+
 private:
     std::array<TableauStack, 7> stacks;
 };
-
-

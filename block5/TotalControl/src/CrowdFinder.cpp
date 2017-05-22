@@ -3,10 +3,10 @@
 //
 
 #include <map>
-#include "CrowdFinder.h"
-#include "Crowd.h"
-#include "User.h"
-#include "Location.h"
+#include "../include/CrowdFinder.h"
+#include "../include/Crowd.h"
+#include "../include/User.h"
+#include "../include/Location.h"
 
 static bool time_interval_intersects(const Timestamp &start1, const Timestamp &end1,
                                      const Timestamp &start2, const Timestamp &end2) {
@@ -17,7 +17,7 @@ std::vector<Crowd> CrowdFinder::find(const std::vector<Location> &list) {
     std::vector<Crowd> crowds;
     for (const auto &loc : list) {
         std::map<Timestamp, std::pair<int, int>> timeline;    // <Timestamp, amount, derivate>
-        const std::vector<User*> users = loc.users();
+        const std::vector<std::shared_ptr<User>> &users = loc.users();
         for (const auto &user : users) {
             timeline[user->startTs()] = {0, 0};
             timeline[user->endTs()] = {0, 0};
@@ -34,14 +34,14 @@ std::vector<Crowd> CrowdFinder::find(const std::vector<Location> &list) {
         }
 
         Timestamp startTs, endTs;
-        std::vector<User*> users_in_crowd;
+        std::vector<std::shared_ptr<User>> users_in_crowd;
         bool flag = false;
         for (auto it = timeline.begin(); it != timeline.end(); ++it) {
-            if (!flag && it->second.first >= _critical_amount) {
+            if (!flag && it->second.first >= critical_amount_) {
                 startTs = it->first;
                 flag = true;
             }
-            if (flag && (it->second.first + it->second.second < _critical_amount || it == std::prev(timeline.end()))) {
+            if (flag && (it->second.first + it->second.second < critical_amount_ || it == std::prev(timeline.end()))) {
                 endTs = it->first;
                 for (const auto &user : users) {
                     if (time_interval_intersects(startTs, endTs, user->startTs(), user->endTs())) {

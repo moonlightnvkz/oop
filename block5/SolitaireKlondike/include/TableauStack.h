@@ -11,11 +11,17 @@ class TableauStack : public CardContainer{
 public:
     TableauStack() {};
 
-    TableauStack(const std::vector<Card> &cards) : CardContainer(cards) {};
+    ~TableauStack() { };
 
-    TableauStack(std::vector<Card> &&cards) : CardContainer(std::move(cards)) {}
+    TableauStack(const TableauStack &stack) : CardContainer(stack.cards) { }
 
-    virtual ~TableauStack() {};
+    TableauStack(TableauStack &&stack) : CardContainer(std::move(stack.cards)) { }
+
+    TableauStack(std::initializer_list<std::shared_ptr<Card>> list) : CardContainer(list) { }
+
+    TableauStack(const std::vector<std::shared_ptr<Card>> &cards) : CardContainer(cards) {};
+
+    TableauStack(std::vector<std::shared_ptr<Card>> &&cards) : CardContainer(std::move(cards)) {}
 
     using CardContainer::push_back;
 
@@ -27,5 +33,9 @@ public:
 
     TableauStack tale(size_t amount);
 
-    virtual bool is_suitable(const Card &card) override;
+    virtual bool is_suitable(const std::shared_ptr<Card> &card) const override;
+
+    TableauStack &operator=(const TableauStack &that);
+
+    TableauStack &operator=(TableauStack &&that);
 };

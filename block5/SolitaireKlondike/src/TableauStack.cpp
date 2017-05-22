@@ -6,7 +6,7 @@
 #include "../include/TableauStack.h"
 
 bool TableauStack::push_back(const TableauStack &stack) {
-    const std::vector<Card> cards = stack.get_cards();
+    const std::vector<std::shared_ptr<Card>> &cards = stack.get_cards();
     if (size() > 0 && is_suitable(cards[0])) {
         for (const auto &c : cards) {
             this->cards.push_back(c);
@@ -16,13 +16,16 @@ bool TableauStack::push_back(const TableauStack &stack) {
     return false;
 }
 
-bool TableauStack::is_suitable(const Card &card) {
-    if (cards.empty()) {
-        return card.get_rank() == Card::eRank::King;
+bool TableauStack::is_suitable(const std::shared_ptr<Card> &card) const {
+    const std::shared_ptr<Card> &top = get_card(0);
+    if (card == nullptr) {
+        return true;
     }
-    const Card &top = back();
-    return static_cast<size_t>(top.get_rank()) == static_cast<size_t>(card.get_rank()) + 1
-           && top.is_black() != card.is_black();
+    if (top == nullptr) {
+        return card->get_rank() == Card::eRank::King;
+    }
+    return static_cast<size_t>(top->get_rank()) == static_cast<size_t>(card->get_rank()) + 1
+           && top->is_black() != card->is_black();
 }
 
 void TableauStack::pop_tale(size_t amount) {
@@ -37,8 +40,8 @@ void TableauStack::pop_tale(size_t amount) {
 
 void TableauStack::pop_back() {
     CardContainer::pop_back();
-    if (cards.size() > 0) {
-        cards.back().set_side(Card::eSide::Face);
+    if (!cards.empty()) {
+        cards.back()->set_side(Card::eSide::Face);
     }
 }
 
@@ -47,5 +50,19 @@ TableauStack TableauStack::tale(size_t amount) {
     if (amount > size) {
         amount = size;
     }
-    return TableauStack(std::vector<Card>(cards.end() - amount, cards.end()));
+    return TableauStack(std::vector<std::shared_ptr<Card>>(cards.end() - amount, cards.end()));
+}
+
+TableauStack &TableauStack::operator=(const TableauStack &that) {
+    if (this != &that) {
+        this->cards = that.cards;
+    }
+    return *this;
+}
+
+TableauStack &TableauStack::operator=(TableauStack &&that) {
+    if (this != &that) {
+        this->cards = std::move(that.cards);
+    }
+    return *this;
 }

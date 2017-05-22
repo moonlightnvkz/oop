@@ -4,13 +4,13 @@ project(TotalControl)
 set(CMAKE_CXX_STANDARD 14)
 
 set(SOURCE_FILES src/main.cpp
-        src/VisitsListReader.cpp src/VisitsListReader.h
-        src/User.cpp src/User.h
-        src/Timestamp.cpp src/Timestamp.h
-        src/Crowd.cpp src/Crowd.h
-        src/CrowdFinder.cpp src/CrowdFinder.h
-        src/Location.cpp src/Location.h
-        src/LocationsSplitter.cpp src/LocationsSplitter.h)
+        src/VisitsListReader.cpp include/VisitsListReader.h
+        src/User.cpp include/User.h
+        src/Timestamp.cpp include/Timestamp.h
+        src/Crowd.cpp include/Crowd.h
+        src/CrowdFinder.cpp include/CrowdFinder.h
+        src/Location.cpp include/Location.h
+        )
 
 
 add_subdirectory(lib/googletest-master)

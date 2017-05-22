@@ -13,13 +13,15 @@ class Location;
 class CrowdFinder {
 public:
     CrowdFinder(const unsigned critical_amount)
-            : _critical_amount(critical_amount) {
+            : critical_amount_(critical_amount) {
     }
+
+    virtual ~CrowdFinder() {};
 
     std::vector<Crowd> find(const std::vector<Location> &list);
 
 private:
-    unsigned _critical_amount;
+    unsigned critical_amount_;
 };
 
 

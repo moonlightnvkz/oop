@@ -6,10 +6,10 @@
 
 #include <string>
 #include <ctime>
-/*
- * YYYY-MM-DDThh:mm:ss	2005-08-09T18:31:42	9 августа 2005 года 18 часов 31 минута 42 секунды
- */
 
+
+/// Format: YYYY-MM-DDThh:mm:ss
+/// Example: 2005-08-09T18:31:42    9 августа 2005 года 18 часов 31 минута 42 секунды
 struct Timestamp {
     unsigned years;
     unsigned months;
@@ -34,6 +34,7 @@ struct Timestamp {
 
     friend bool operator>=(const Timestamp &a, const Timestamp &b);
 
+    /// \return Diff time in milliseconds
     friend double operator-(const Timestamp &a, const Timestamp &b);
 };
 
@@ -51,4 +52,5 @@ bool operator>=(const Timestamp &a, const Timestamp &b);
 
 bool operator>(const Timestamp &a, const Timestamp &b);
 
+/// \return Diff time in milliseconds
 double operator-(const Timestamp &a, const Timestamp &b);

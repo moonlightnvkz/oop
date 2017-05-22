@@ -6,35 +6,43 @@
 
 #include <vector>
 #include <cstddef>
+#include <memory>
 #include "Card.h"
 
 class CardContainer {
 public:
-    CardContainer() {};
+    CardContainer() { }
 
-    CardContainer(const std::vector<Card> &cards) : cards(cards) {};
+    virtual ~CardContainer() { }
 
-    CardContainer(std::vector<Card> &&cards) : cards(std::move(cards)) {}
+    CardContainer(const CardContainer &container) : cards(container.cards) { }
 
-    virtual ~CardContainer() {};
+    CardContainer(CardContainer &&container) : cards(std::move(container.cards)) { }
 
-    const std::vector<Card> &get_cards() const { return cards; }
+    CardContainer(std::initializer_list<std::shared_ptr<Card>> list) : cards(list) { }
 
-    virtual bool push_back(Card &card);
+    CardContainer(const std::vector<std::shared_ptr<Card>> &cards) : cards(cards) {};
 
-    virtual bool push_back(Card &&card);
+    CardContainer(std::vector<std::shared_ptr<Card>> &&cards) : cards(std::move(cards)) {}
+
+    const std::vector<std::shared_ptr<Card>> &get_cards() const { return cards; }
+
+    virtual bool push_back(const std::shared_ptr<Card> &card);
 
     virtual void pop_back();
 
-    const Card &back() const;
+    std::shared_ptr<Card> get_card(size_t idx_from_back = 0) const;
 
-    const Card &peek(size_t idx_from_back);
+    size_t size() const { return cards.size(); }
 
-    size_t size() { return cards.size(); }
+    virtual bool is_suitable(const std::shared_ptr<Card> &card) const;
 
-    virtual bool is_suitable(const Card &card);
+    CardContainer &operator=(const CardContainer &that);
 
-    std::vector<Card> cards;
+    CardContainer &operator=(CardContainer &&that);
+
+protected:
+    std::vector<std::shared_ptr<Card>> cards;
 };
 
 

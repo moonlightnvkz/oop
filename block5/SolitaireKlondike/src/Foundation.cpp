@@ -4,11 +4,26 @@
 
 #include "../include/Foundation.h"
 
-bool Foundation::is_complete() {
-    for(const auto stack : stacks) {
-        if (stack.back().get_rank() != Card::eRank::King) {
+bool Foundation::is_complete() const {
+    for(const auto &stack : stacks) {
+        std::shared_ptr<Card> card = stack.get_card(0);
+        if (card == nullptr || card->get_rank() != Card::eRank::King) {
             return false;
         }
     }
     return true;
+}
+
+Foundation &Foundation::operator=(const Foundation &that) {
+    if (this != &that) {
+        this->stacks = that.stacks;
+    }
+    return *this;
+}
+
+Foundation &Foundation::operator=(const Foundation &&that) {
+    if (this != &that) {
+        this->stacks = std::move(that.stacks);
+    }
+    return *this;
 }
