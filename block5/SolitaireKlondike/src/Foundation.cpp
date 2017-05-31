@@ -6,7 +6,7 @@
 
 bool Foundation::is_complete() const {
     for(const auto &stack : stacks) {
-        std::shared_ptr<Card> card = stack.get_card(0);
+        const Card *card = stack.peek_card();
         if (card == nullptr || card->get_rank() != Card::eRank::King) {
             return false;
         }
@@ -14,14 +14,7 @@ bool Foundation::is_complete() const {
     return true;
 }
 
-Foundation &Foundation::operator=(const Foundation &that) {
-    if (this != &that) {
-        this->stacks = that.stacks;
-    }
-    return *this;
-}
-
-Foundation &Foundation::operator=(const Foundation &&that) {
+Foundation &Foundation::operator=(Foundation &&that) {
     if (this != &that) {
         this->stacks = std::move(that.stacks);
     }

@@ -5,19 +5,18 @@
 #include <cstddef>
 #include "../include/TableauStack.h"
 
-bool TableauStack::push_back(const TableauStack &stack) {
-    const std::vector<std::shared_ptr<Card>> &cards = stack.get_cards();
-    if (size() > 0 && is_suitable(cards[0])) {
-        for (const auto &c : cards) {
-            this->cards.push_back(c);
+bool TableauStack::push_back(TableauStack &&stack) {
+    if (size() > 0 && is_suitable(stack.cards[0].get())) {
+        for (auto &c : stack.cards) {
+            this->cards.push_back(std::move(c));
         }
         return true;
     }
     return false;
 }
 
-bool TableauStack::is_suitable(const std::shared_ptr<Card> &card) const {
-    const std::shared_ptr<Card> &top = get_card(0);
+bool TableauStack::is_suitable(const Card *card) const {
+    const Card *top = peek_card();
     if (card == nullptr) {
         return true;
     }
@@ -50,14 +49,11 @@ TableauStack TableauStack::tale(size_t amount) {
     if (amount > size) {
         amount = size;
     }
-    return TableauStack(std::vector<std::shared_ptr<Card>>(cards.end() - amount, cards.end()));
-}
-
-TableauStack &TableauStack::operator=(const TableauStack &that) {
-    if (this != &that) {
-        this->cards = that.cards;
+    std::vector<std::unique_ptr<Card>> tale;
+    for (auto i = cards.end() - amount; i < cards.end(); ++i) {
+        tale.push_back(std::move(*i));
     }
-    return *this;
+    return std::move(TableauStack(std::move(tale)));
 }
 
 TableauStack &TableauStack::operator=(TableauStack &&that) {

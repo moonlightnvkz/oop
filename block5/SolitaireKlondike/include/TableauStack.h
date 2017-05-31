@@ -13,19 +13,13 @@ public:
 
     ~TableauStack() { };
 
-    TableauStack(const TableauStack &stack) : CardContainer(stack.cards) { }
-
     TableauStack(TableauStack &&stack) : CardContainer(std::move(stack.cards)) { }
 
-    TableauStack(std::initializer_list<std::shared_ptr<Card>> list) : CardContainer(list) { }
-
-    TableauStack(const std::vector<std::shared_ptr<Card>> &cards) : CardContainer(cards) {};
-
-    TableauStack(std::vector<std::shared_ptr<Card>> &&cards) : CardContainer(std::move(cards)) {}
+    TableauStack(std::vector<std::unique_ptr<Card>> &&cards) : CardContainer(std::move(cards)) {}
 
     using CardContainer::push_back;
 
-    bool push_back(const TableauStack &stack);
+    bool push_back(TableauStack &&stack);
 
     virtual void pop_back() override;
 
@@ -33,9 +27,7 @@ public:
 
     TableauStack tale(size_t amount);
 
-    virtual bool is_suitable(const std::shared_ptr<Card> &card) const override;
-
-    TableauStack &operator=(const TableauStack &that);
+    virtual bool is_suitable(const Card *card) const override;
 
     TableauStack &operator=(TableauStack &&that);
 };

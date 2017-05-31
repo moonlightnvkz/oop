@@ -22,7 +22,7 @@ TEST(CardDeckTest, IntegrityTest) {
     constexpr const unsigned CPS = 13;   // Cards Per Suit
     std::vector<unsigned> cards(Amount, 0);
     for (unsigned i = 0; i < Amount; ++i) {
-        std::shared_ptr<Card> card = deck.get_card();
+        std::unique_ptr<Card> card = deck.back();
         deck.pop_back();
         ++cards[static_cast<unsigned>(card->get_suit()) * CPS + static_cast<unsigned>(card->get_rank())];
         EXPECT_EQ(card->get_side(), Card::eSide::Back);
@@ -33,22 +33,26 @@ TEST(CardDeckTest, IntegrityTest) {
 }
 
 TEST(FoundationTest, StackAddTest) {
-    std::shared_ptr<Card> ace_sp = std::make_shared<Card>(Card::eSuit::Spades, Card::eRank::Ace);
-    std::shared_ptr<Card> king_sp = std::make_shared<Card>(Card::eSuit::Spades, Card::eRank::King);
-    std::shared_ptr<Card> two_sp = std::make_shared<Card>(Card::eSuit::Spades, Card::eRank::Two);
-    std::shared_ptr<Card> two_cl = std::make_shared<Card>(Card::eSuit::Clubs, Card::eRank::Two);
+    std::unique_ptr<Card> ace_sp = std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::Ace);
+    std::unique_ptr<Card> ace_sp_exp = std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::Ace);
+    std::unique_ptr<Card> king_sp = std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::King);
+    std::unique_ptr<Card> king_sp_exp = std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::King);
+    std::unique_ptr<Card> two_sp = std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::Two);
+    std::unique_ptr<Card> two_sp_exp = std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::Two);
+    std::unique_ptr<Card> two_cl = std::make_unique<Card>(Card::eSuit::Clubs, Card::eRank::Two);
+    std::unique_ptr<Card> two_cl_exp = std::make_unique<Card>(Card::eSuit::Clubs, Card::eRank::Two);
     FoundationStack stack;
-    EXPECT_FALSE(stack.push_back(two_sp));
+    EXPECT_FALSE(stack.push_back(std::move(two_sp)));
     EXPECT_EQ(stack.size(), 0);
-    EXPECT_FALSE(stack.push_back(king_sp));
+    EXPECT_FALSE(stack.push_back(std::move(king_sp)));
     EXPECT_EQ(stack.size(), 0);
-    EXPECT_TRUE(stack.push_back(ace_sp));
-    EXPECT_EQ(*stack.get_card(), *ace_sp);
-    EXPECT_FALSE(stack.push_back(two_cl));
-    EXPECT_EQ(*stack.get_card(), *ace_sp);
-    EXPECT_TRUE(stack.push_back(two_sp));
-    EXPECT_EQ(*stack.get_card(), *two_sp);
-    const std::vector<std::shared_ptr<Card>> &cards = stack.get_cards();
+    EXPECT_TRUE(stack.push_back(std::move(ace_sp)));
+    EXPECT_EQ(*stack.peek_card(), *ace_sp_exp);
+    EXPECT_FALSE(stack.push_back(std::move(two_cl)));
+    EXPECT_EQ(*stack.peek_card(), *ace_sp_exp);
+    EXPECT_TRUE(stack.push_back(std::move(two_sp)));
+    EXPECT_EQ(*stack.peek_card(), *two_sp_exp);
+    const std::vector<std::unique_ptr<Card>> &cards = stack.get_cards();
     ASSERT_EQ(cards.size(), 2);
 }
 
@@ -61,76 +65,102 @@ TEST(FoundationTest, CompleteTest) {
         Card::eSuit suit = static_cast<Card::eSuit>(i);
         for (unsigned j = 0; j < CPS; ++j) {
             Card::eRank rank = static_cast<Card::eRank>(j);
-            ASSERT_TRUE(stack.push_back(std::make_shared<Card>(suit, rank)));
+            ASSERT_TRUE(stack.push_back(std::make_unique<Card>(suit, rank)));
         }
     }
     EXPECT_TRUE(foundation.is_complete());
 }
 
 TEST(TableauTest, StackAddTest) {
-    std::shared_ptr<Card> ace_sp = std::make_shared<Card>(Card::eSuit::Spades, Card::eRank::Ace);
-    std::shared_ptr<Card> two_sp = std::make_shared<Card>(Card::eSuit::Spades, Card::eRank::Two);
-    std::shared_ptr<Card> king_sp = std::make_shared<Card>(Card::eSuit::Spades, Card::eRank::King);
-    std::shared_ptr<Card> queen_sp = std::make_shared<Card>(Card::eSuit::Spades, Card::eRank::Queen);
-    std::shared_ptr<Card> queen_he = std::make_shared<Card>(Card::eSuit::Hearts, Card::eRank::Queen);
+    std::unique_ptr<Card> ace_sp = std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::Ace);
+    std::unique_ptr<Card> ace_sp_exp = std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::Ace);
+    std::unique_ptr<Card> two_sp = std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::Two);
+    std::unique_ptr<Card> two_sp_exp = std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::Two);
+    std::unique_ptr<Card> king_sp = std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::King);
+    std::unique_ptr<Card> king_sp_exp = std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::King);
+    std::unique_ptr<Card> queen_sp = std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::Queen);
+    std::unique_ptr<Card> queen_sp_exp = std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::Queen);
+    std::unique_ptr<Card> queen_he = std::make_unique<Card>(Card::eSuit::Hearts, Card::eRank::Queen);
+    std::unique_ptr<Card> queen_he_exp = std::make_unique<Card>(Card::eSuit::Hearts, Card::eRank::Queen);
     TableauStack stack;
-    EXPECT_FALSE(stack.push_back(two_sp));
+    EXPECT_FALSE(stack.push_back(std::move(two_sp)));
     EXPECT_EQ(stack.size(), 0);
-    EXPECT_FALSE(stack.push_back(ace_sp));
+    EXPECT_FALSE(stack.push_back(std::move(ace_sp)));
     EXPECT_EQ(stack.size(), 0);
-    EXPECT_TRUE(stack.push_back(king_sp));
-    EXPECT_EQ(*stack.get_card(), *king_sp);
-    EXPECT_FALSE(stack.push_back(queen_sp));
-    EXPECT_EQ(*stack.get_card(), *king_sp);
-    EXPECT_TRUE(stack.push_back(queen_he));
-    EXPECT_EQ(*stack.get_card(), *queen_he);
-    const std::vector<std::shared_ptr<Card>> &cards = stack.get_cards();
+    EXPECT_TRUE(stack.push_back(std::move(king_sp)));
+    EXPECT_EQ(*stack.peek_card(), *king_sp_exp);
+    EXPECT_FALSE(stack.push_back(std::move(queen_sp)));
+    EXPECT_EQ(*stack.peek_card(), *king_sp_exp);
+    EXPECT_TRUE(stack.push_back(std::move(queen_he)));
+    EXPECT_EQ(*stack.peek_card(), *queen_he_exp);
+    const std::vector<std::unique_ptr<Card>> &cards = stack.get_cards();
     ASSERT_EQ(cards.size(), 2);
 }
 
 TEST(TableauTest, InitTest) {
     std::array<TableauStack, 7> stacks;
-    std::shared_ptr<Card> c1 = std::make_shared<Card>(Card::eSuit::Hearts, Card::eRank::Nine);
-    std::shared_ptr<Card> c2 = std::make_shared<Card>(Card::eSuit::Spades, Card::eRank::Nine);
-    std::shared_ptr<Card> c3 = std::make_shared<Card>(Card::eSuit::Clubs, Card::eRank::Nine);
-    std::shared_ptr<Card> c4 = std::make_shared<Card>(Card::eSuit::Hearts, Card::eRank::Nine);
-    std::shared_ptr<Card> c5 = std::make_shared<Card>(Card::eSuit::Diamonds, Card::eRank::Nine);
-    std::vector<std::shared_ptr<Card>> cards{c1, c2, c3, c4, c5};
+    std::unique_ptr<Card> cards_exp_init[] = {
+            std::make_unique<Card>(Card::eSuit::Hearts, Card::eRank::Nine),
+            std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::Nine),
+            std::make_unique<Card>(Card::eSuit::Clubs, Card::eRank::Nine),
+            std::make_unique<Card>(Card::eSuit::Hearts, Card::eRank::Nine),
+            std::make_unique<Card>(Card::eSuit::Diamonds, Card::eRank::Nine)
+    };
+    std::vector<std::unique_ptr<Card>> cards_exp{std::make_move_iterator(std::begin(cards_exp_init)),
+                                                 std::make_move_iterator(std::end(cards_exp_init))};
     for (unsigned i = 0; i < 7; ++i) {
-        TableauStack stack(cards);
+        std::unique_ptr<Card> cards_init[] = {
+                std::make_unique<Card>(Card::eSuit::Hearts, Card::eRank::Nine),
+                std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::Nine),
+                std::make_unique<Card>(Card::eSuit::Clubs, Card::eRank::Nine),
+                std::make_unique<Card>(Card::eSuit::Hearts, Card::eRank::Nine),
+                std::make_unique<Card>(Card::eSuit::Diamonds, Card::eRank::Nine)
+        };
+        std::vector<std::unique_ptr<Card>> cards{std::make_move_iterator(std::begin(cards_init)),
+                                                 std::make_move_iterator(std::end(cards_init))};
+        TableauStack stack(std::move(cards));
         stacks.at(i) = std::move(stack);
     }
     Tableau tableau(std::move(stacks));
     for (unsigned i = 0; i < 7; ++i) {
         TableauStack &stack = tableau.stack(i);
-        const std::vector<std::shared_ptr<Card>> &sc = stack.get_cards();
-        ASSERT_EQ(sc.size(), cards.size());
+        const std::vector<std::unique_ptr<Card>> &sc = stack.get_cards();
+        ASSERT_EQ(sc.size(), cards_exp.size());
         size_t size = sc.size();
         for (size_t j = 0; j < size; ++j) {
-            EXPECT_EQ(*cards[j], *sc[j]);
-            EXPECT_EQ(cards[j]->get_side(), Card::eSide::Back);
+            EXPECT_EQ(*cards_exp[j], *sc[j]);
+            EXPECT_EQ(cards_exp[j]->get_side(), Card::eSide::Back);
         }
     }
 }
 
 TEST(TableauTest, StackInitTest) {
-    std::shared_ptr<Card> ace_sp = std::make_shared<Card>(Card::eSuit::Spades, Card::eRank::Ace);
-    std::shared_ptr<Card> two_sp = std::make_shared<Card>(Card::eSuit::Spades, Card::eRank::Two);
-    std::shared_ptr<Card> king_sp = std::make_shared<Card>(Card::eSuit::Spades, Card::eRank::King);
-    std::shared_ptr<Card> queen_sp = std::make_shared<Card>(Card::eSuit::Spades, Card::eRank::Queen);
-    std::shared_ptr<Card> queen_he = std::make_shared<Card>(Card::eSuit::Hearts, Card::eRank::Queen);
-    TableauStack stack({two_sp, ace_sp, queen_sp, queen_he, king_sp});
+    std::unique_ptr<Card> stack_init[] = {
+            std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::Two),
+            std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::Ace),
+            std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::Queen),
+            std::make_unique<Card>(Card::eSuit::Hearts, Card::eRank::Queen),
+            std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::King)
+    };
+    std::unique_ptr<Card> ace_sp_exp = std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::Ace);
+    std::unique_ptr<Card> two_sp_exp = std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::Two);
+    std::unique_ptr<Card> king_sp_exp = std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::King);
+    std::unique_ptr<Card> queen_sp_exp = std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::Queen);
+    std::unique_ptr<Card> queen_he_exp = std::make_unique<Card>(Card::eSuit::Hearts, Card::eRank::Queen);
+    TableauStack stack(std::vector<std::unique_ptr<Card>>(std::make_move_iterator(std::begin(stack_init)),
+                                                          std::make_move_iterator(std::end(stack_init))));
+
     const auto &cards = stack.get_cards();
     ASSERT_EQ(cards.size(), 5);
-    EXPECT_EQ(*stack.get_card(), *king_sp);
+    EXPECT_EQ(*stack.peek_card(), *king_sp_exp);
     stack.pop_back();
-    EXPECT_EQ(*stack.get_card(), *queen_he);
+    EXPECT_EQ(*stack.peek_card(), *queen_he_exp);
     stack.pop_back();
-    EXPECT_EQ(*stack.get_card(), *queen_sp);
+    EXPECT_EQ(*stack.peek_card(), *queen_sp_exp);
     stack.pop_back();
-    EXPECT_EQ(*stack.get_card(), *ace_sp);
+    EXPECT_EQ(*stack.peek_card(), *ace_sp_exp);
     stack.pop_back();
-    EXPECT_EQ(*stack.get_card(), *two_sp);
+    EXPECT_EQ(*stack.peek_card(), *two_sp_exp);
     stack.pop_back();
     EXPECT_EQ(stack.size(), 0);
 }
@@ -142,72 +172,93 @@ TEST(DeckWaste, DeckToWaste) {
     EXPECT_THROW(deck.move_card_to_waste(), std::logic_error);
     EXPECT_NO_THROW(waste.move_card_to_deck());
     deck.set_waste(&waste);
-    const std::shared_ptr<Card> &card = deck.get_card();
+    const Card *card = deck.peek_card();
     EXPECT_NO_THROW(deck.move_card_to_waste());
-    EXPECT_EQ(*waste.get_card(), *card);
+    EXPECT_EQ(*waste.peek_card(), *card);
     waste.move_card_to_deck();
-    EXPECT_EQ(*deck.get_card(), *card);
+    EXPECT_EQ(*deck.peek_card(), *card);
 }
 
 TEST(TableauTest, ConcatTest) {
-    std::shared_ptr<Card> king_sp = std::make_shared<Card>(Card::eSuit::Spades, Card::eRank::King);
-    std::shared_ptr<Card> queen_he = std::make_shared<Card>(Card::eSuit::Hearts, Card::eRank::Queen);
-    std::shared_ptr<Card> jack_sp = std::make_shared<Card>(Card::eSuit::Spades, Card::eRank::Jack);
-    std::shared_ptr<Card> ten_he = std::make_shared<Card>(Card::eSuit::Hearts, Card::eRank::Ten);
-    std::shared_ptr<Card> jack_he = std::make_shared<Card>(Card::eSuit::Hearts, Card::eRank::Jack);
-    std::shared_ptr<Card> ten_sp = std::make_shared<Card>(Card::eSuit::Spades, Card::eRank::Ten);
-    TableauStack a({king_sp, queen_he});
-    TableauStack b({jack_he, ten_sp});
-    TableauStack c({jack_sp, ten_he});
+    std::unique_ptr<Card> a_init[] = {
+            std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::King),
+            std::make_unique<Card>(Card::eSuit::Hearts, Card::eRank::Queen)
+    };
+    std::unique_ptr<Card> b_init[] = {
+            std::make_unique<Card>(Card::eSuit::Hearts, Card::eRank::Jack),
+            std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::Ten)
+    };
+    std::unique_ptr<Card> c_init[] = {
+            std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::Jack),
+            std::make_unique<Card>(Card::eSuit::Hearts, Card::eRank::Ten)
+    };
+    std::unique_ptr<Card> king_sp_exp = std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::King);
+    std::unique_ptr<Card> queen_he_exp = std::make_unique<Card>(Card::eSuit::Hearts, Card::eRank::Queen);
+    std::unique_ptr<Card> jack_sp_exp = std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::Jack);
+    std::unique_ptr<Card> ten_he_exp = std::make_unique<Card>(Card::eSuit::Hearts, Card::eRank::Ten);
+    std::unique_ptr<Card> jack_he_exp = std::make_unique<Card>(Card::eSuit::Hearts, Card::eRank::Jack);
+    std::unique_ptr<Card> ten_sp_exp = std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::Ten);
+    TableauStack a(std::vector<std::unique_ptr<Card>>(std::make_move_iterator(std::begin(a_init)),
+                                                      std::make_move_iterator(std::end(a_init))));
+    TableauStack b(std::vector<std::unique_ptr<Card>>(std::make_move_iterator(std::begin(b_init)),
+                                                      std::make_move_iterator(std::end(b_init))));
+    TableauStack c(std::vector<std::unique_ptr<Card>>(std::make_move_iterator(std::begin(c_init)),
+                                                      std::make_move_iterator(std::end(c_init))));
 
-    EXPECT_FALSE(a.push_back(b));
+    EXPECT_FALSE(a.push_back(std::move(b)));
     EXPECT_EQ(a.get_cards().size(), 2);
-    EXPECT_EQ(*a.get_cards()[0], *king_sp);
-    EXPECT_EQ(*a.get_cards()[1], *queen_he);
+    EXPECT_EQ(*a.get_cards()[0], *king_sp_exp);
+    EXPECT_EQ(*a.get_cards()[1], *queen_he_exp);
 
-    EXPECT_TRUE(a.push_back(c));
+    EXPECT_TRUE(a.push_back(std::move(c)));
     EXPECT_EQ(a.get_cards().size(), 4);
-    EXPECT_EQ(*a.get_cards()[0], *king_sp);
-    EXPECT_EQ(*a.get_cards()[1], *queen_he);
-    EXPECT_EQ(*a.get_cards()[2], *jack_sp);
-    EXPECT_EQ(*a.get_cards()[3], *ten_he);
+    EXPECT_EQ(*a.get_cards()[0], *king_sp_exp);
+    EXPECT_EQ(*a.get_cards()[1], *queen_he_exp);
+    EXPECT_EQ(*a.get_cards()[2], *jack_sp_exp);
+    EXPECT_EQ(*a.get_cards()[3], *ten_he_exp);
 }
 
 TEST(TableuTest, PopTaleTest) {
-    std::shared_ptr<Card> king_sp = std::make_shared<Card>(Card::eSuit::Spades, Card::eRank::King);
-    std::shared_ptr<Card> queen_he = std::make_shared<Card>(Card::eSuit::Hearts, Card::eRank::Queen);
-    std::shared_ptr<Card> jack_sp = std::make_shared<Card>(Card::eSuit::Spades, Card::eRank::Jack);
-    std::shared_ptr<Card> ten_he = std::make_shared<Card>(Card::eSuit::Hearts, Card::eRank::Ten);
-    std::shared_ptr<Card> nine_sp = std::make_shared<Card>(Card::eSuit::Spades, Card::eRank::Nine);
-    std::shared_ptr<Card> eight_he = std::make_shared<Card>(Card::eSuit::Hearts, Card::eRank::Eight);
-    TableauStack a({king_sp, queen_he, jack_sp,
-                    ten_he, nine_sp, eight_he});
+    std::unique_ptr<Card> a_init[] = {std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::King),
+                                      std::make_unique<Card>(Card::eSuit::Hearts, Card::eRank::Queen),
+                                      std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::Jack),
+                                      std::make_unique<Card>(Card::eSuit::Hearts, Card::eRank::Ten),
+                                      std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::Nine),
+                                      std::make_unique<Card>(Card::eSuit::Hearts, Card::eRank::Eight)
+    };
+    std::unique_ptr<Card> king_sp_exp = std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::King);
+    std::unique_ptr<Card> queen_he_exp = std::make_unique<Card>(Card::eSuit::Hearts, Card::eRank::Queen);
+    std::unique_ptr<Card> jack_sp_exp = std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::Jack);
+    std::unique_ptr<Card> ten_he_exp = std::make_unique<Card>(Card::eSuit::Hearts, Card::eRank::Ten);
+    std::unique_ptr<Card> nine_sp_exp = std::make_unique<Card>(Card::eSuit::Spades, Card::eRank::Nine);
+    std::unique_ptr<Card> eight_he_exp = std::make_unique<Card>(Card::eSuit::Hearts, Card::eRank::Eight);
+    TableauStack a(std::vector<std::unique_ptr<Card>>(std::make_move_iterator(std::begin(a_init)),
+                                                      std::make_move_iterator(std::end(a_init))));
     TableauStack tale = a.tale(1);
     a.pop_tale(1);
     {
-        const std::vector<std::shared_ptr<Card>> &cards = tale.get_cards();
+        const std::vector<std::unique_ptr<Card>> &cards = tale.get_cards();
         ASSERT_EQ(cards.size(), 1);
-        EXPECT_EQ(*cards[0], *eight_he);
-        a.push_back(eight_he);
+        EXPECT_EQ(*cards[0], *eight_he_exp);
+        a.push_back(std::move(tale));
     }
     tale = a.tale(2);
     a.pop_tale(2);
     {
-        const std::vector<std::shared_ptr<Card>> &cards = tale.get_cards();
+        const std::vector<std::unique_ptr<Card>> &cards = tale.get_cards();
         ASSERT_EQ(cards.size(), 2);
-        EXPECT_EQ(*cards[0], *nine_sp);
-        EXPECT_EQ(*cards[1], *eight_he);
-        a.push_back(nine_sp);
-        a.push_back(eight_he);
+        EXPECT_EQ(*cards[0], *nine_sp_exp);
+        EXPECT_EQ(*cards[1], *eight_he_exp);
+        a.push_back(std::move(tale));
     }
     tale = a.tale(4);
     a.pop_tale(4);
     {
-        const std::vector<std::shared_ptr<Card>> &cards = tale.get_cards();
+        const std::vector<std::unique_ptr<Card>> &cards = tale.get_cards();
         ASSERT_EQ(cards.size(), 4);
-        EXPECT_EQ(*cards[0], *jack_sp);
-        EXPECT_EQ(*cards[1], *ten_he);
-        EXPECT_EQ(*cards[2], *nine_sp);
-        EXPECT_EQ(*cards[3], *eight_he);
+        EXPECT_EQ(*cards[0], *jack_sp_exp);
+        EXPECT_EQ(*cards[1], *ten_he_exp);
+        EXPECT_EQ(*cards[2], *nine_sp_exp);
+        EXPECT_EQ(*cards[3], *eight_he_exp);
     }
 }

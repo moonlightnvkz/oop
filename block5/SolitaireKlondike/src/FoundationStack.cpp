@@ -5,8 +5,8 @@
 #include <cstddef>
 #include "../include/FoundationStack.h"
 
-bool FoundationStack::is_suitable(const std::shared_ptr<Card> &card) const {
-    const std::shared_ptr<Card> &top = get_card(0);
+bool FoundationStack::is_suitable(const Card *card) const {
+    const Card *top = peek_card();
     if (card == nullptr) {
         return true;
     }
@@ -15,13 +15,6 @@ bool FoundationStack::is_suitable(const std::shared_ptr<Card> &card) const {
     }
     return static_cast<size_t>(top->get_rank()) == static_cast<size_t>(card->get_rank()) - 1
            && top->get_suit() == card->get_suit();
-}
-
-FoundationStack &FoundationStack::operator=(const FoundationStack &that) {
-    if (this != &that) {
-        this->cards = that.cards;
-    }
-    return *this;
 }
 
 FoundationStack &FoundationStack::operator=(FoundationStack &&that) {

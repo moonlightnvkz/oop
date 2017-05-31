@@ -47,10 +47,12 @@ public:
     void set_side(eSide side) { this->side = side; }
 
     bool is_black() const { return suit == eSuit::Clubs || suit == eSuit::Spades; }
-    
+
 private:
     eSuit suit;
+
     eRank rank;
+
     eSide side;
 };
 

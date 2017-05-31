@@ -5,16 +5,23 @@
 #include <stdexcept>
 #include "../include/CardContainer.h"
 
-bool CardContainer::push_back(const std::shared_ptr<Card> &card) {
+bool CardContainer::push_back(std::unique_ptr<Card> &&card) {
     if (card == nullptr) {
         return true;
     }
-    if (is_suitable(card)) {
-        cards.push_back(std::move(card));
+    if (is_suitable(card.get())) {
         card->set_side(Card::eSide::Face);
+        cards.push_back(std::move(card));
         return true;
     }
     return false;
+}
+
+std::unique_ptr<Card> CardContainer::back() {
+    std::unique_ptr<Card> res = cards.size() > 0 ?
+                                std::move(cards.back()) : std::move(std::unique_ptr<Card>(nullptr));
+    //pop_back();
+    return std::move(res);
 }
 
 void CardContainer::pop_back() {
@@ -24,11 +31,11 @@ void CardContainer::pop_back() {
     cards.pop_back();
 }
 
-bool CardContainer::is_suitable(const std::shared_ptr<Card> &card) const {
+bool CardContainer::is_suitable(const Card *card) const {
     return true;
 }
 
-std::shared_ptr<Card> CardContainer::get_card(size_t idx_from_back) const {
+const Card *CardContainer::peek_card(size_t idx_from_back) const {
     size_t size = cards.size();
     if (size == 0) {
         return nullptr;
@@ -36,19 +43,12 @@ std::shared_ptr<Card> CardContainer::get_card(size_t idx_from_back) const {
     if (idx_from_back >= size) {
         idx_from_back = size - 1;
     }
-    return cards[size - idx_from_back - 1];
-}
-
-CardContainer &CardContainer::operator=(const CardContainer &that) {
-    if (this != &that) {
-        this->cards = that.cards;
-    }
-    return *this;
+    return cards[size - idx_from_back - 1].get();
 }
 
 CardContainer &CardContainer::operator=(CardContainer &&that) {
     if (this != &that) {
-        this->cards = that.cards;
+        this->cards = std::move(that.cards);
     }
     return *this;
 }

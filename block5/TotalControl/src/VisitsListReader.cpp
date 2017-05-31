@@ -19,5 +19,8 @@ bool VisitsListReader::read(std::istream &is, std::vector<Location> &list) {
             map.at(location).add_user(std::make_shared<User>(startTs, endTs, user_id));
         }
     }
+    for (auto e : map) {
+        list.push_back(std::move(e.second));
+    }
     return is.eof();
 }

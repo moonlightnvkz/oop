@@ -15,34 +15,28 @@ public:
 
     virtual ~CardContainer() { }
 
-    CardContainer(const CardContainer &container) : cards(container.cards) { }
-
     CardContainer(CardContainer &&container) : cards(std::move(container.cards)) { }
 
-    CardContainer(std::initializer_list<std::shared_ptr<Card>> list) : cards(list) { }
+    CardContainer(std::vector<std::unique_ptr<Card>> &&cards) : cards(std::move(cards)) {}
 
-    CardContainer(const std::vector<std::shared_ptr<Card>> &cards) : cards(cards) {};
+    const std::vector<std::unique_ptr<Card>> &get_cards() const { return cards; }
 
-    CardContainer(std::vector<std::shared_ptr<Card>> &&cards) : cards(std::move(cards)) {}
+    virtual bool push_back(std::unique_ptr<Card> &&card);
 
-    const std::vector<std::shared_ptr<Card>> &get_cards() const { return cards; }
-
-    virtual bool push_back(const std::shared_ptr<Card> &card);
+    std::unique_ptr<Card> back();
 
     virtual void pop_back();
 
-    std::shared_ptr<Card> get_card(size_t idx_from_back = 0) const;
+    const Card *peek_card(size_t idx_from_back = 0) const;
 
     size_t size() const { return cards.size(); }
 
-    virtual bool is_suitable(const std::shared_ptr<Card> &card) const;
-
-    CardContainer &operator=(const CardContainer &that);
+    virtual bool is_suitable(const Card *card) const;
 
     CardContainer &operator=(CardContainer &&that);
 
 protected:
-    std::vector<std::shared_ptr<Card>> cards;
+    std::vector<std::unique_ptr<Card>> cards;
 };
 
 
