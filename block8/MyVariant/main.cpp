@@ -19,8 +19,8 @@ int main() {
     std::cout << "Hello, World!" << std::endl;
 
     my_variant::variant<int, char> myVariant = 1;
-    static_assert(my_variant::details::is_printable<int>::value);
+    static_assert(my_variant::details::is_streamable<int>::value);
     assert(myVariant.can_convert<std::string>());
-    std::cout << myVariant.to<std::string>() << std::endl;
+    std::cout << myVariant.convert<std::string>() << std::endl;
     return 0;
 }

@@ -52,7 +52,7 @@ namespace my_variant {
         };
 
         template<typename Obj>
-        struct is_printable {
+        struct is_streamable {
             template<typename O>
             static constexpr auto
             test(int) -> decltype(std::declval<std::ostream &>() << std::declval<const O &>(), true) {
@@ -75,7 +75,7 @@ namespace my_variant {
         template<typename From>
         struct is_convertible_helper<From, std::string> {
             static bool const value = is_explicitly_convertible<From, std::string>::value ||
-                                      is_printable<From>::value;
+                                      is_streamable<From>::value;
         };
 
         template<typename From, typename To>
@@ -155,6 +155,7 @@ namespace my_variant {
                 }
             }
 
+            /// @return index of current type held
             static size_t index(size_t type_id, size_t start = 0) {
                 if (type_id == typeid(F).hash_code()) {
                     return start;
@@ -293,7 +294,7 @@ namespace my_variant {
         }
 
         template<typename To>
-        To to() const {
+        To convert() const {
             if (!can_convert<To>()) {
                 throw std::bad_cast();
             } else {
