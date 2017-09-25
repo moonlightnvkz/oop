@@ -25,14 +25,9 @@ namespace my_variant {
                                         static_max<b, args...>::value;
         };
 
-        template<typename...>
+        template<typename T, typename... Ts>
         struct is_one_of {
-            static constexpr bool value = false;
-        };
-
-        template<typename T, typename F, typename... Ts>
-        struct is_one_of<T, F, Ts...> {
-            static constexpr bool value = std::is_same<T, F>::value || is_one_of<T, Ts...>::value;
+            static constexpr bool value = std::disjunction<std::is_same<T, Ts>...>::value;
         };
 
         /// @value is equal to true if static_cast<To>(From) is available
@@ -80,8 +75,16 @@ namespace my_variant {
 
         template<typename From, typename To>
         struct cast_helper {
-            static To cast(const From &from) {
-                return static_cast<To>(from);
+            template<typename F = From, typename T = To>
+            static typename std::enable_if<is_convertible_helper<F, T>::value, T>::type
+            cast(const F &from) {
+                return static_cast<T>(from);
+            }
+
+            template<typename F = From, typename T = To>
+            static typename std::enable_if<!is_convertible_helper<F, T>::value, T>::type
+            cast(const F &from) {
+                throw std::bad_cast();
             }
         };
 
@@ -90,17 +93,33 @@ namespace my_variant {
 
         template<typename From>
         struct cast_to_string_helper<From, true> {
-            static std::string cast(const From &from) {
-                return static_cast<std::string>(from);
+            template<typename F = From, typename T = std::string>
+            static typename std::enable_if<is_convertible_helper<F, T>::value, T>::type
+            cast(const F &from) {
+                return static_cast<T>(from);
+            }
+
+            template<typename F = From, typename T = std::string>
+            static typename std::enable_if<!is_convertible_helper<F, T>::value, T>::type
+            cast(const F &from) {
+                throw std::bad_cast();
             }
         };
 
         template<typename From>
         struct cast_to_string_helper<From, false> {
-            static std::string cast(const From &from) {
+            template<typename F = From, typename T = std::string>
+            static typename std::enable_if<is_convertible_helper<F, T>::value, T>::type
+            cast(const F &from) {
                 std::stringstream ss;
                 ss << from;
                 return ss.str();
+            }
+
+            template<typename F = From, typename T = std::string>
+            static typename std::enable_if<!is_convertible_helper<F, T>::value, T>::type
+            cast(const F &from) {
+                throw std::bad_cast();
             }
         };
 
@@ -149,7 +168,7 @@ namespace my_variant {
 
             static bool is_equal(size_t type_id, const void *a, const void *b) {
                 if (type_id == typeid(F).hash_code()) {
-                    return *reinterpret_cast<F *>(a) == *reinterpret_cast<F *>(b);
+                    return *reinterpret_cast<const F *>(a) == *reinterpret_cast<const F *>(b);
                 } else {
                     return helper<Ts...>::is_equal(type_id, a, b);
                 }
@@ -183,7 +202,6 @@ namespace my_variant {
             }
         };
 
-
         template<>
         class helper<> {
         public:
@@ -193,7 +211,7 @@ namespace my_variant {
 
             static void move(size_t type_id, void *src, void *dst) {}
 
-            static void is_equal(size_t type_id, const void *a, const void *b) {}
+            static bool is_equal(size_t type_id, const void *a, const void *b) { assert(false); }
 
             static size_t index(size_t type_id, size_t start = 0) { assert(false); }
 
@@ -212,43 +230,43 @@ namespace my_variant {
             type_id = details::helper<Ts...>::initialize(&data);
         }
 
-        variant(const variant<Ts...> &that)
+        variant(const variant &that)
                 : type_id(that.type_id) {
             details::helper<Ts...>::copy(type_id, &that.data, &data);
         }
 
         template<typename T,
-                typename = typename std::enable_if<details::is_one_of<T, Ts...>::value, void>::type>
+                typename = typename std::enable_if<details::is_one_of<typename std::remove_reference<T>::type, Ts...>::value, void>::type>
         variant(T &&v) {
             set<T>(std::forward<T>(v));
         }
 
-        variant(variant<Ts...> &&that) noexcept
+        variant(variant &&that) noexcept
                 : type_id(std::move(type_id)) {
             details::helper<Ts...>::move(type_id, &that.data, &data);
         }
 
-        variant<Ts...> &operator=(const variant<Ts...> &that) {
+        ~variant() {
+            details::helper<Ts...>::destroy(type_id, &data);
+        }
+
+        variant<Ts...> &operator=(const variant &that) {
             type_id = that.type_id;
             details::helper<Ts...>::copy(type_id, &that.data, &data);
             return *this;
         }
 
-        variant<Ts...> &operator=(variant<Ts...> &&that) noexcept {
+        variant<Ts...> &operator=(variant &&that) noexcept {
             type_id = std::move(that.type_id);
             details::helper<Ts...>::move(type_id, &that.data, &data);
             return *this;
         }
 
         template<typename T,
-                typename = typename std::enable_if<details::is_one_of<T, Ts...>::value, void>::type>
+                typename = typename std::enable_if<details::is_one_of<typename std::remove_reference<T>::type, Ts...>::value, void>::type>
         variant<Ts...> &operator=(T &&v) {
             set<T>(std::forward<T>(v));
             return *this;
-        }
-
-        ~variant() {
-            details::helper<Ts...>::destroy(type_id, &data);
         }
 
         template<typename T>
@@ -257,15 +275,15 @@ namespace my_variant {
         }
 
         template<typename T, typename... Args,
-                typename = typename std::enable_if<details::is_one_of<T, Ts...>::value, void>::type>
+                typename = typename std::enable_if<details::is_one_of<typename std::remove_reference<T>::type, Ts...>::value, void>::type>
         void set(Args &&... args) {
             details::helper<Ts...>::destroy(type_id, &data);
-            new(&data) T(std::forward<Args>(args)...);
+            new(&data) typename std::remove_reference<T>::type(std::forward<Args>(args)...);
             type_id = typeid(T).hash_code();
         };
 
         template<typename T,
-                typename = typename std::enable_if<details::is_one_of<T, Ts...>::value, void>::type>
+                typename = typename std::enable_if<details::is_one_of<typename std::remove_reference<T>::type, Ts...>::value, void>::type>
         T &get() {
             if (type_id == typeid(T).hash_code()) {
                 return *reinterpret_cast<T *>(&data);
@@ -295,11 +313,7 @@ namespace my_variant {
 
         template<typename To>
         To convert() const {
-            if (!can_convert<To>()) {
-                throw std::bad_cast();
-            } else {
-                return details::helper<Ts...>::template cast<To>(type_id, &data);
-            }
+            return details::helper<Ts...>::template cast<To>(type_id, &data);
         }
 
     private:
