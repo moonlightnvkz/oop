@@ -211,15 +211,23 @@ namespace my_variant {
 
             static void move(size_t type_id, void *src, void *dst) {}
 
-            static bool is_equal(size_t type_id, const void *a, const void *b) { assert(false); }
+            [[noreturn]] static bool is_equal(size_t type_id, const void *a, const void *b) {
+                throw std::logic_error("Function should not return");
+            }
 
-            static size_t index(size_t type_id, size_t start = 0) { assert(false); }
+            [[noreturn]] static size_t index(size_t type_id, size_t start = 0) {
+                throw std::logic_error("Function should not return");
+            }
 
             template<typename To>
-            static bool is_convertible(size_t type_id) { assert(false); }
+            [[noreturn]] static bool is_convertible(size_t type_id) {
+                throw std::logic_error("Function should not return");
+            }
 
             template<typename To>
-            static To cast(size_t type_id, const void *data) { assert(false); }
+            [[noreturn]] static To cast(size_t type_id, const void *data) {
+                throw std::logic_error("Function should not return");
+            }
         };
     }
 
@@ -235,8 +243,11 @@ namespace my_variant {
             details::helper<Ts...>::copy(type_id, &that.data, &data);
         }
 
+        template<typename T>
+        using is_one_of_remove_ref = details::is_one_of<typename std::remove_reference<T>::type, Ts...>;
+
         template<typename T,
-                typename = typename std::enable_if<details::is_one_of<typename std::remove_reference<T>::type, Ts...>::value, void>::type>
+                typename = typename std::enable_if<is_one_of_remove_ref<T>::value, void>::type>
         variant(T &&v) {
             set<T>(std::forward<T>(v));
         }
@@ -246,25 +257,29 @@ namespace my_variant {
             details::helper<Ts...>::move(type_id, &that.data, &data);
         }
 
-        ~variant() {
+        virtual ~variant() {
             details::helper<Ts...>::destroy(type_id, &data);
         }
 
-        variant<Ts...> &operator=(const variant &that) {
-            type_id = that.type_id;
-            details::helper<Ts...>::copy(type_id, &that.data, &data);
+        variant &operator=(const variant &that) {
+            if (*this != that) {
+                type_id = that.type_id;
+                details::helper<Ts...>::copy(type_id, &that.data, &data);
+            }
             return *this;
         }
 
-        variant<Ts...> &operator=(variant &&that) noexcept {
-            type_id = std::move(that.type_id);
-            details::helper<Ts...>::move(type_id, &that.data, &data);
+        variant &operator=(variant &&that) noexcept {
+            if (*this != that) {
+                type_id = std::move(that.type_id);
+                details::helper<Ts...>::move(type_id, &that.data, &data);
+            }
             return *this;
         }
 
         template<typename T,
-                typename = typename std::enable_if<details::is_one_of<typename std::remove_reference<T>::type, Ts...>::value, void>::type>
-        variant<Ts...> &operator=(T &&v) {
+                typename = typename std::enable_if<is_one_of_remove_ref<T>::value, void>::type>
+        variant &operator=(T &&v) {
             set<T>(std::forward<T>(v));
             return *this;
         }
@@ -275,7 +290,7 @@ namespace my_variant {
         }
 
         template<typename T, typename... Args,
-                typename = typename std::enable_if<details::is_one_of<typename std::remove_reference<T>::type, Ts...>::value, void>::type>
+                typename = typename std::enable_if<is_one_of_remove_ref<T>::value, void>::type>
         void set(Args &&... args) {
             details::helper<Ts...>::destroy(type_id, &data);
             new(&data) typename std::remove_reference<T>::type(std::forward<Args>(args)...);
@@ -283,7 +298,7 @@ namespace my_variant {
         };
 
         template<typename T,
-                typename = typename std::enable_if<details::is_one_of<typename std::remove_reference<T>::type, Ts...>::value, void>::type>
+                typename = typename std::enable_if<is_one_of_remove_ref<T>::value, void>::type>
         T &get() {
             if (type_id == typeid(T).hash_code()) {
                 return *reinterpret_cast<T *>(&data);
@@ -311,12 +326,14 @@ namespace my_variant {
             return details::helper<Ts...>::template is_convertible<To>(type_id);
         }
 
+        /// @return object with requested type
+        /// @throw std::bad_cast if cast is unavailable
         template<typename To>
         To convert() const {
             return details::helper<Ts...>::template cast<To>(type_id, &data);
         }
 
-    private:
+    protected:
         static const size_t data_size = details::static_max<sizeof(Ts)...>::value;
 
         static const size_t data_align = details::static_max<alignof(Ts)...>::value;

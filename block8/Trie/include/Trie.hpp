@@ -103,11 +103,18 @@ public:
 template<class T>
 class ConstTrieIterator : public std::iterator<std::forward_iterator_tag, std::pair<std::string, T &>> {
 public:
-    ConstTrieIterator(const SubTrie<T> &x);
+    explicit ConstTrieIterator(const SubTrie<T> &x)
+            : mCurrent({&x}) {
+    }
 
-    ConstTrieIterator(const TrieIterator &mit);
+    ConstTrieIterator(const TrieIterator &mit) = default;
 
-    ConstTrieIterator &operator++();
+    ConstTrieIterator &operator++() {
+        if (mCurrent) {
+
+        }
+        return *this;
+    }
 
     ConstTrieIterator operator++(int);
 
@@ -118,6 +125,11 @@ public:
     value_type operator*();
 
     value_type *operator->();
+
+protected:
+    ConstTrieIterator() = default;
+
+    std::optional<SubTrie<T>*> mCurrent;
 };
 
 template <class T>
@@ -137,38 +149,57 @@ class SubTrie {
         }
     }
 
-    SubTrie(const SubTrie<T> &trie) {
-        for (auto it = trie.begin(); it != trie.end(); ++it) {
-            insert(it->first, it->second);
-        }
-    }
+    SubTrie(const SubTrie<T> &trie) = default;
 
     ~SubTrie() {
         clear();
     }
 
-    SubTrie<T> &operator=(const Trie &trie) {
-        clear();
-        for (auto it = trie.begin(); it != trie.end(); ++it) {
-            insert(it->first, it->second);
-        }
-    }
+    SubTrie<T> &operator=(const Trie &trie) = default;
 
     iterator begin() {
+        const SubTrie<T> *st = this;
         if (mChildren.empty()) {
             return end();
         }
+        while (!st->mChildren.empty()) {
+            st = *st->mChildren.begin();
+        }
+        return iterator(*st);
     }
 
     const_iterator begin() const {
+        const SubTrie<T> *st = this;
         if (mChildren.empty()) {
             return end();
         }
+        while (!st->mChildren.empty()) {
+            st = *st->mChildren.begin();
+        }
+        return const_iterator(*st);
     }
 
-    iterator end();
+    iterator end() {
+        const SubTrie<T> *st = this;
+        if (mChildren.empty()) {
+            return end();
+        }
+        while (!st->mChildren.empty()) {
+            st = *st->mChildren.rbegin();
+        }
+        return iterator(*st);
+    }
 
-    const_iterator end() const;
+    const_iterator end() const {
+        const SubTrie<T> *st = this;
+        if (mChildren.empty()) {
+            return end();
+        }
+        while (!st->mChildren.empty()) {
+            st = *st->mChildren.rbegin();
+        }
+        return const_iterator(*st);
+    }
 
     bool empty() const; //Test whether container is empty
 
@@ -204,7 +235,7 @@ protected:
 
     std::weak_ptr<SubTrie<T>> mParent;
 
-    std::optional<T> mValue;    // No value if it's root
+    std::optional<T> mValue;    // No value if it's root or end
 
     std::string mKeyPart;
 };
