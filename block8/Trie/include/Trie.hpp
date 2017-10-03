@@ -75,19 +75,22 @@ public:
     const_iterator find(const key_type &k) const;
 
     SubTrie<T> GetSubTrie(const key_type &subKey); // получить subtree
-
-protected:
-    std::shared_ptr<SubTrie<T>> mRoot;
 };
 
 template<class T>
 class TrieIterator : public std::iterator<std::forward_iterator_tag, std::pair<std::string, T &>> {
 public:
-    TrieIterator(const SubTrie<T> &x);
+    explicit TrieIterator(const SubTrie<T> &x)
+            : mCurrentSubTrie({&x}) {
+    }
 
-    TrieIterator(const TrieIterator &mit);
+    TrieIterator(const TrieIterator &mit)
+            : mCurrentSubTrie(mit.mCurrentSubTrie) {
+    }
 
-    TrieIterator &operator++();
+    TrieIterator &operator++() {
+
+    }
 
     TrieIterator operator++(int);
 
@@ -98,23 +101,19 @@ public:
     value_type operator*();
 
     value_type *operator->();
+
+protected:
+    std::optional<const SubTrie<T>*> mCurrentSubTrie;
 };
 
 template<class T>
 class ConstTrieIterator : public std::iterator<std::forward_iterator_tag, std::pair<std::string, T &>> {
 public:
-    explicit ConstTrieIterator(const SubTrie<T> &x)
-            : mCurrent({&x}) {
-    }
+    explicit ConstTrieIterator(const SubTrie<T> &x);
 
-    ConstTrieIterator(const TrieIterator &mit) = default;
+    ConstTrieIterator(const TrieIterator &mit);
 
-    ConstTrieIterator &operator++() {
-        if (mCurrent) {
-
-        }
-        return *this;
-    }
+    ConstTrieIterator &operator++();
 
     ConstTrieIterator operator++(int);
 
@@ -125,11 +124,6 @@ public:
     value_type operator*();
 
     value_type *operator->();
-
-protected:
-    ConstTrieIterator() = default;
-
-    std::optional<SubTrie<T>*> mCurrent;
 };
 
 template <class T>
@@ -143,63 +137,21 @@ class SubTrie {
     SubTrie() = default;
 
     template<class InputIterator>
-    SubTrie(InputIterator first, InputIterator last) {
-        for (auto it = first; it != last; ++it) {
-            insert(it->first, it->second);
-        }
-    }
+    SubTrie(InputIterator first, InputIterator last);
 
-    SubTrie(const SubTrie<T> &trie) = default;
+    SubTrie(const SubTrie<T> &trie);
 
-    ~SubTrie() {
-        clear();
-    }
+    ~SubTrie();
 
-    SubTrie<T> &operator=(const Trie &trie) = default;
+    SubTrie<T> &operator=(const Trie &trie);
 
-    iterator begin() {
-        const SubTrie<T> *st = this;
-        if (mChildren.empty()) {
-            return end();
-        }
-        while (!st->mChildren.empty()) {
-            st = *st->mChildren.begin();
-        }
-        return iterator(*st);
-    }
+    iterator begin();
 
-    const_iterator begin() const {
-        const SubTrie<T> *st = this;
-        if (mChildren.empty()) {
-            return end();
-        }
-        while (!st->mChildren.empty()) {
-            st = *st->mChildren.begin();
-        }
-        return const_iterator(*st);
-    }
+    const_iterator begin() const;
 
-    iterator end() {
-        const SubTrie<T> *st = this;
-        if (mChildren.empty()) {
-            return end();
-        }
-        while (!st->mChildren.empty()) {
-            st = *st->mChildren.rbegin();
-        }
-        return iterator(*st);
-    }
+    iterator end();
 
-    const_iterator end() const {
-        const SubTrie<T> *st = this;
-        if (mChildren.empty()) {
-            return end();
-        }
-        while (!st->mChildren.empty()) {
-            st = *st->mChildren.rbegin();
-        }
-        return const_iterator(*st);
-    }
+    const_iterator end() const;
 
     bool empty() const; //Test whether container is empty
 
@@ -231,11 +183,5 @@ class SubTrie {
     SubTrie<T> GetSubTrie(const key_type &subKey); // получить subtree
 
 protected:
-    std::map<key_type, std::shared_ptr<SubTrie<T>>> mChildren;
-
-    std::weak_ptr<SubTrie<T>> mParent;
-
-    std::optional<T> mValue;    // No value if it's root or end
-
-    std::string mKeyPart;
+    std::map<char, SubTrie<T>> mClidren;
 };
