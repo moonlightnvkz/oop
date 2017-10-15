@@ -1,0 +1,3 @@
+[submodule "block8/Trie/lib/googletest"]
+	path = block8/Trie/lib/googletest
+	url = git@github.com:google/googletest.git
