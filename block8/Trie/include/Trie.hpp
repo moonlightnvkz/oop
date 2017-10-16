@@ -521,9 +521,8 @@ public:
     }
 
     void erase(iterator first, iterator last) {
-        for (auto it = first; it != last; ++it) {
-            // FIXME: mark nodes for deletion, then delete after the for loop
-            erase(it);
+        for (auto it = first; it != last; ) {
+            erase(it++);
         }
     }
 

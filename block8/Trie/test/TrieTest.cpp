@@ -34,7 +34,9 @@ TEST(TrieTest, TrieInsertTest) {
     EXPECT_EQ(trie.erase("bca"), 3u);
     EXPECT_TRUE(trie.empty());
     trie.insert(v.begin(), v.end());
-//    trie.erase(trie.find("abc"), trie.find("bca"));
+    trie.erase(trie.find("abc"), ++trie.find("bca"));
+    EXPECT_TRUE(trie.empty());
+    trie.insert(v.begin(), v.end());
     auto it = trie.begin();
     EXPECT_EQ(*it, 1);
     EXPECT_EQ(it.key(), "abc");
