@@ -13,20 +13,22 @@
 #include <utility>
 #include <cassert>
 
-template <class T> class SubTrie;
+template <typename T> class SubTrie;
 
-template <class T> class TrieIterator;
+template <typename T> class TrieIterator;
 
-template <class T> class ConstTrieIterator;
+template <typename T> class ConstTrieIterator;
 
-template<class T>
+template<typename T>
 class Trie {
 public:
-    typedef TrieIterator <T> iterator;
-    typedef ConstTrieIterator <T> const_iterator;
+    using iterator = TrieIterator<T>;
 
-    typedef T value_type;
-    typedef std::string_view key_type;
+    using const_iterator = ConstTrieIterator <T>;
+
+    using value_type = T;
+
+    using key_type = std::string_view;
 
     Trie() {
         mRoot.reset(new SubTrie<T>(*this));
@@ -141,272 +143,16 @@ protected:
     friend class SubTrie<T>;
 };
 
-template<class T>
-class TrieIterator {
-public:
-    TrieIterator(const TrieIterator &mit)
-            : mRoot(mit.mRoot), mCurrentSubTrie(mit.mCurrentSubTrie), mCurrentKey(mit.mCurrentKey) {
-    }
-
-    virtual ~TrieIterator() = default;
-
-    TrieIterator &operator++() {
-        auto currentShared = mCurrentSubTrie.lock();
-        if (currentShared->mChildren.empty()) { // If we can't go deeper
-            auto rootShared = mRoot.lock();
-            for (;;) {
-                bool isRoot = currentShared == rootShared;
-                // If we have reached the root,
-                // it has no other children except we iterated through.
-                // Return an iterator to the end.
-                if (isRoot) {
-                    mCurrentSubTrie.reset();
-                    mCurrentKey.clear();
-                    return *this;
-                }
-                auto parent = currentShared->mParent.lock();
-                auto currentIter = parent->mChildren.find(currentShared->mKeyPart);
-                bool isLastChild = currentIter == --parent->mChildren.end();
-                if (!isLastChild) {
-                    // The root's mKeyPart is not taken into account.
-                    // So the mCurrentKey might be empty if the parent is the root.
-                    // pop_back on empty string cause UB.
-                    if (!mCurrentKey.empty()) {
-                        mCurrentKey.pop_back();
-                    }
-                    if (!mCurrentKey.empty()) {
-                        mCurrentKey.pop_back();
-                    }
-                    currentShared = (++currentIter)->second;
-                    mCurrentKey += currentShared->mKeyPart;
-                    break;
-                } else {
-                    currentShared = parent;
-                    if (!mCurrentKey.empty()) {
-                        mCurrentKey.pop_back();
-                    }
-                }
-            }
-        }
-        // If we have reached this, we already changed the branch.
-        // Just go deeper.
-        while(!currentShared->mChildren.empty()) {
-            currentShared = currentShared->mChildren.begin()->second;
-            mCurrentKey += currentShared->mKeyPart;
-        }
-        mCurrentSubTrie = currentShared;
-        return *this;
-    }
-
-    TrieIterator operator++(int) {
-        auto that = *this;
-        ++*this;
-        return that;
-    }
-
-    bool operator==(const TrieIterator &rhs) const {
-        return mCurrentSubTrie.lock() == rhs.mCurrentSubTrie.lock() &&
-               mRoot.lock() == rhs.mRoot.lock() &&
-               mCurrentKey == rhs.mCurrentKey;
-    }
-
-    bool operator!=(const TrieIterator &rhs) const {
-        return !(*this == rhs);
-    }
-
-    T &operator*() const {
-        auto shared = mCurrentSubTrie.lock();
-        if (!shared) {
-            throw std::out_of_range("Dereference iterator to end");
-        }
-        return shared->mVal.value();
-    }
-
-    T *operator->() const {
-        auto shared = mCurrentSubTrie.lock();
-        if (!shared) {
-            throw std::out_of_range("Dereference iterator to end");
-        }
-        return &shared->mVal.value();
-    }
-
-    const std::string &key() const {
-        return mCurrentKey;
-    }
-
-protected:
-    explicit TrieIterator(std::weak_ptr<SubTrie<T>> root, bool end = false)
-            : mRoot(root) {
-        if (!end) {
-            decltype(mCurrentSubTrie.lock()->mChildren.begin()) it;
-            auto currentShared = mRoot.lock();
-            while (currentShared && !currentShared->mChildren.empty()) {
-                currentShared = currentShared->mChildren.begin()->second;
-                mCurrentKey += currentShared->mKeyPart;
-            }
-            if (currentShared != mRoot.lock()) {
-                mCurrentSubTrie = currentShared;
-            }
-        }
-    }
-
-    explicit TrieIterator(std::weak_ptr<SubTrie<T>> root, std::weak_ptr<SubTrie<T>> current)
-            : mRoot(root), mCurrentSubTrie(current) {
-        auto currentSubTrie = current.lock();
-        auto rootShared = root.lock();
-        while (currentSubTrie != rootShared && currentSubTrie->mParent.lock()) {
-            mCurrentKey += currentSubTrie->mKeyPart;
-            currentSubTrie = currentSubTrie->mParent.lock();
-        }
-        std::reverse(mCurrentKey.begin(), mCurrentKey.end());
-    }
-
-    std::weak_ptr<SubTrie<T>> mRoot;
-
-    std::weak_ptr<SubTrie<T>> mCurrentSubTrie;
-
-    std::string mCurrentKey;
-
-    friend class SubTrie<T>;
-};
-
-template<class T>
-class ConstTrieIterator {
-public:
-    ConstTrieIterator(const ConstTrieIterator &mit)
-            : mRoot(mit.mRoot), mCurrentSubTrie(mit.mCurrentSubTrie), mCurrentKey(mit.mCurrentKey) {
-    }
-
-    virtual ~ConstTrieIterator() = default;
-
-    ConstTrieIterator &operator++() {
-        auto currentShared = mCurrentSubTrie.lock();
-        if (currentShared->mChildren.empty()) { // If we can't go deeper
-            auto rootShared = mRoot.lock();
-            for (;;) {
-                bool isRoot = currentShared == rootShared;
-                // If we have reached the root,
-                // it has no other children except we iterated through.
-                // Return an iterator to the end.
-                if (isRoot) {
-                    mCurrentSubTrie.reset();
-                    mCurrentKey.clear();
-                    return *this;
-                }
-                auto parent = currentShared->mParent.lock();
-                auto currentIter = parent->mChildren.find(currentShared->mKeyPart);
-                bool isLastChild = currentIter == --parent->mChildren.end();
-                if (!isLastChild) {
-                    // The root's mKeyPart is not taken into account.
-                    // So the mCurrentKey might be empty if the parent is the root.
-                    // pop_back on empty string cause UB.
-                    if (!mCurrentKey.empty()) {
-                        mCurrentKey.pop_back();
-                    }
-                    if (!mCurrentKey.empty()) {
-                        mCurrentKey.pop_back();
-                    }
-                    currentShared = (++currentIter)->second;
-                    mCurrentKey += currentShared->mKeyPart;
-                    break;
-                } else {
-                    currentShared = parent;
-                    if (!mCurrentKey.empty()) {
-                        mCurrentKey.pop_back();
-                    }
-                }
-            }
-        }
-        // If we have reached this, we already changed the branch.
-        // Just go deeper.
-        while(!currentShared->mChildren.empty()) {
-            currentShared = currentShared->mChildren.begin()->second;
-            mCurrentKey += currentShared->mKeyPart;
-        }
-        mCurrentSubTrie = currentShared;
-        return *this;
-    }
-
-    ConstTrieIterator operator++(int) {
-        auto that = *this;
-        ++*this;
-        return that;
-    }
-
-    bool operator==(const ConstTrieIterator &rhs) const {
-        return mCurrentSubTrie.lock() == rhs.mCurrentSubTrie.lock() &&
-               mRoot.lock() == rhs.mRoot.lock() &&
-               mCurrentKey == rhs.mCurrentKey;
-    }
-
-    bool operator!=(const ConstTrieIterator &rhs) const {
-        return !(*this == rhs);
-    }
-
-    T &operator*() const {
-        auto shared = mCurrentSubTrie.lock();
-        if (!shared) {
-            throw std::out_of_range("Dereference iterator to end");
-        }
-        return shared->mVal.value();
-    }
-
-    T *operator->() const {
-        auto shared = mCurrentSubTrie.lock();
-        if (!shared) {
-            throw std::out_of_range("Dereference iterator to end");
-        }
-        return &shared->mVal.value();
-    }
-
-    const std::string &key() const {
-        return mCurrentKey;
-    }
-
-protected:
-    explicit ConstTrieIterator(std::weak_ptr<SubTrie<T>> root, bool end = false)
-            : mRoot(root) {
-            if (!end) {
-                decltype(mCurrentSubTrie.lock()->mChildren.begin()) it;
-                auto currentShared = mRoot.lock();
-                while (currentShared && !currentShared->mChildren.empty()) {
-                    currentShared = currentShared->mChildren.begin()->second;
-                    mCurrentKey += currentShared->mKeyPart;
-                }
-                if (currentShared != mRoot.lock()) {
-                    mCurrentSubTrie = currentShared;
-                }
-            }
-    }
-
-    explicit ConstTrieIterator(std::weak_ptr<SubTrie<T>> root, std::weak_ptr<SubTrie<T>> current)
-            : mRoot(root), mCurrentSubTrie(current) {
-        auto currentSubTrie = current.lock();
-        auto rootShared = root.lock();
-        while (currentSubTrie != rootShared && currentSubTrie->mParent.lock()) {
-            mCurrentKey += currentSubTrie->mKeyPart;
-            currentSubTrie = currentSubTrie->mParent.lock();
-        }
-        std::reverse(mCurrentKey.begin(), mCurrentKey.end());
-    }
-
-    std::weak_ptr<SubTrie<T>> mRoot;
-
-    std::weak_ptr<SubTrie<T>> mCurrentSubTrie;
-
-    std::string mCurrentKey;
-
-    friend class SubTrie<T>;
-};
-
-template <class T>
+template <typename T>
 class SubTrie {
 public:
-    typedef TrieIterator <T> iterator;
-    typedef ConstTrieIterator <T> const_iterator;
+    using iterator = TrieIterator<T>;
 
-    typedef T value_type;
-    typedef std::string_view key_type;
+    using const_iterator = ConstTrieIterator <T>;
+
+    using value_type = T;
+
+    using key_type = std::string_view;
 
     SubTrie() = default;
 
@@ -650,4 +396,266 @@ protected:
     char mKeyPart = char(0);
 
     bool mIsLeaf = false;
+};
+
+template<typename T>
+class TrieIterator {
+public:
+    using value_type = T;
+
+    TrieIterator(const TrieIterator &mit)
+            : mRoot(mit.mRoot), mCurrentSubTrie(mit.mCurrentSubTrie), mCurrentKey(mit.mCurrentKey) {
+    }
+
+    virtual ~TrieIterator() = default;
+
+    TrieIterator &operator++() {
+        auto currentShared = mCurrentSubTrie.lock();
+        if (currentShared->mChildren.empty()) { // If we can't go deeper
+            auto rootShared = mRoot.lock();
+            for (;;) {
+                bool isRoot = currentShared == rootShared;
+                // If we have reached the root,
+                // it has no other children except we iterated through.
+                // Return an iterator to the end.
+                if (isRoot) {
+                    mCurrentSubTrie.reset();
+                    mCurrentKey.clear();
+                    return *this;
+                }
+                auto parent = currentShared->mParent.lock();
+                auto currentIter = parent->mChildren.find(currentShared->mKeyPart);
+                bool isLastChild = currentIter == --parent->mChildren.end();
+                if (!isLastChild) {
+                    // The root's mKeyPart is not taken into account.
+                    // So the mCurrentKey might be empty if the parent is the root.
+                    // pop_back on empty string cause UB.
+                    if (!mCurrentKey.empty()) {
+                        mCurrentKey.pop_back();
+                    }
+                    if (!mCurrentKey.empty()) {
+                        mCurrentKey.pop_back();
+                    }
+                    currentShared = (++currentIter)->second;
+                    mCurrentKey += currentShared->mKeyPart;
+                    break;
+                } else {
+                    currentShared = parent;
+                    if (!mCurrentKey.empty()) {
+                        mCurrentKey.pop_back();
+                    }
+                }
+            }
+        }
+        // If we have reached this, we already changed the branch.
+        // Just go deeper.
+        while(!currentShared->mChildren.empty()) {
+            currentShared = currentShared->mChildren.begin()->second;
+            mCurrentKey += currentShared->mKeyPart;
+        }
+        mCurrentSubTrie = currentShared;
+        return *this;
+    }
+
+    TrieIterator operator++(int) {
+        auto that = *this;
+        ++*this;
+        return that;
+    }
+
+    bool operator==(const TrieIterator &rhs) const {
+        return mCurrentSubTrie.lock() == rhs.mCurrentSubTrie.lock() &&
+               mRoot.lock() == rhs.mRoot.lock() &&
+               mCurrentKey == rhs.mCurrentKey;
+    }
+
+    bool operator!=(const TrieIterator &rhs) const {
+        return !(*this == rhs);
+    }
+
+    value_type &operator*() const {
+        auto shared = mCurrentSubTrie.lock();
+        if (!shared) {
+            throw std::out_of_range("Dereference iterator to end");
+        }
+        return shared->mVal.value();
+    }
+
+    value_type *operator->() const {
+        auto shared = mCurrentSubTrie.lock();
+        if (!shared) {
+            throw std::out_of_range("Dereference iterator to end");
+        }
+        return &shared->mVal.value();
+    }
+
+    const std::string &key() const {
+        return mCurrentKey;
+    }
+
+protected:
+    explicit TrieIterator(std::weak_ptr<SubTrie<T>> root, bool end = false)
+            : mRoot(root) {
+        if (!end) {
+            decltype(mCurrentSubTrie.lock()->mChildren.begin()) it;
+            auto currentShared = mRoot.lock();
+            while (currentShared && !currentShared->mChildren.empty()) {
+                currentShared = currentShared->mChildren.begin()->second;
+                mCurrentKey += currentShared->mKeyPart;
+            }
+            if (currentShared != mRoot.lock()) {
+                mCurrentSubTrie = currentShared;
+            }
+        }
+    }
+
+    explicit TrieIterator(std::weak_ptr<SubTrie<T>> root, std::weak_ptr<SubTrie<T>> current)
+            : mRoot(root), mCurrentSubTrie(current) {
+        auto currentSubTrie = current.lock();
+        auto rootShared = root.lock();
+        while (currentSubTrie != rootShared && currentSubTrie->mParent.lock()) {
+            mCurrentKey += currentSubTrie->mKeyPart;
+            currentSubTrie = currentSubTrie->mParent.lock();
+        }
+        std::reverse(mCurrentKey.begin(), mCurrentKey.end());
+    }
+
+    std::weak_ptr<SubTrie<T>> mRoot;
+
+    std::weak_ptr<SubTrie<T>> mCurrentSubTrie;
+
+    std::string mCurrentKey;
+
+    friend class SubTrie<T>;
+};
+
+template<typename T>
+class ConstTrieIterator {
+public:
+    using value_type = const T;
+
+    ConstTrieIterator(const ConstTrieIterator &mit)
+            : mRoot(mit.mRoot), mCurrentSubTrie(mit.mCurrentSubTrie), mCurrentKey(mit.mCurrentKey) {
+    }
+
+    virtual ~ConstTrieIterator() = default;
+
+    ConstTrieIterator &operator++() {
+        auto currentShared = mCurrentSubTrie.lock();
+        if (currentShared->mChildren.empty()) { // If we can't go deeper
+            auto rootShared = mRoot.lock();
+            for (;;) {
+                bool isRoot = currentShared == rootShared;
+                // If we have reached the root,
+                // it has no other children except we iterated through.
+                // Return an iterator to the end.
+                if (isRoot) {
+                    mCurrentSubTrie.reset();
+                    mCurrentKey.clear();
+                    return *this;
+                }
+                auto parent = currentShared->mParent.lock();
+                auto currentIter = parent->mChildren.find(currentShared->mKeyPart);
+                bool isLastChild = currentIter == --parent->mChildren.end();
+                if (!isLastChild) {
+                    // The root's mKeyPart is not taken into account.
+                    // So the mCurrentKey might be empty if the parent is the root.
+                    // pop_back on empty string cause UB.
+                    if (!mCurrentKey.empty()) {
+                        mCurrentKey.pop_back();
+                    }
+                    if (!mCurrentKey.empty()) {
+                        mCurrentKey.pop_back();
+                    }
+                    currentShared = (++currentIter)->second;
+                    mCurrentKey += currentShared->mKeyPart;
+                    break;
+                } else {
+                    currentShared = parent;
+                    if (!mCurrentKey.empty()) {
+                        mCurrentKey.pop_back();
+                    }
+                }
+            }
+        }
+        // If we have reached this, we already changed the branch.
+        // Just go deeper.
+        while(!currentShared->mChildren.empty()) {
+            currentShared = currentShared->mChildren.begin()->second;
+            mCurrentKey += currentShared->mKeyPart;
+        }
+        mCurrentSubTrie = currentShared;
+        return *this;
+    }
+
+    ConstTrieIterator operator++(int) {
+        auto that = *this;
+        ++*this;
+        return that;
+    }
+
+    bool operator==(const ConstTrieIterator &rhs) const {
+        return mCurrentSubTrie.lock() == rhs.mCurrentSubTrie.lock() &&
+               mRoot.lock() == rhs.mRoot.lock() &&
+               mCurrentKey == rhs.mCurrentKey;
+    }
+
+    bool operator!=(const ConstTrieIterator &rhs) const {
+        return !(*this == rhs);
+    }
+
+    value_type &operator*() const {
+        auto shared = mCurrentSubTrie.lock();
+        if (!shared) {
+            throw std::out_of_range("Dereference iterator to end");
+        }
+        return shared->mVal.value();
+    }
+
+    value_type *operator->() const {
+        auto shared = mCurrentSubTrie.lock();
+        if (!shared) {
+            throw std::out_of_range("Dereference iterator to end");
+        }
+        return &shared->mVal.value();
+    }
+
+    const std::string &key() const {
+        return mCurrentKey;
+    }
+
+protected:
+    explicit ConstTrieIterator(std::weak_ptr<SubTrie<T>> root, bool end = false)
+            : mRoot(root) {
+        if (!end) {
+            decltype(mCurrentSubTrie.lock()->mChildren.begin()) it;
+            auto currentShared = mRoot.lock();
+            while (currentShared && !currentShared->mChildren.empty()) {
+                currentShared = currentShared->mChildren.begin()->second;
+                mCurrentKey += currentShared->mKeyPart;
+            }
+            if (currentShared != mRoot.lock()) {
+                mCurrentSubTrie = currentShared;
+            }
+        }
+    }
+
+    explicit ConstTrieIterator(std::weak_ptr<SubTrie<T>> root, std::weak_ptr<SubTrie<T>> current)
+            : mRoot(root), mCurrentSubTrie(current) {
+        auto currentSubTrie = current.lock();
+        auto rootShared = root.lock();
+        while (currentSubTrie != rootShared && currentSubTrie->mParent.lock()) {
+            mCurrentKey += currentSubTrie->mKeyPart;
+            currentSubTrie = currentSubTrie->mParent.lock();
+        }
+        std::reverse(mCurrentKey.begin(), mCurrentKey.end());
+    }
+
+    std::weak_ptr<SubTrie<T>> mRoot;
+
+    std::weak_ptr<SubTrie<T>> mCurrentSubTrie;
+
+    std::string mCurrentKey;
+
+    friend class SubTrie<T>;
 };

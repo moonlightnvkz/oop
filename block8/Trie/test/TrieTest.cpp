@@ -118,7 +118,9 @@ TEST(GetSubTrie, TrieTest) {
         t.insert(std::to_string(i) + std::to_string(i+2), i+2);
     }
 
-    auto ret = t.getSubTrie("2");
+    auto ret = t.getSubTrie("ajhbcva");
+    ASSERT_FALSE(ret.has_value());
+    ret = t.getSubTrie("2");
     ASSERT_TRUE(ret.has_value());
     SubTrie<int> sub = ret.value();
     EXPECT_EQ(sub.getRootValue(), 2);
