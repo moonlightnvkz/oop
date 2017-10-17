@@ -122,7 +122,7 @@ TEST(GetSubTrie, TrieTest) {
     ASSERT_FALSE(ret.has_value());
     ret = t.getSubTrie("2");
     ASSERT_TRUE(ret.has_value());
-    SubTrie<int> sub = ret.value();
+    Trie<int>::SubTrie sub = ret.value();
     EXPECT_EQ(sub.getRootValue(), 2);
     auto f = sub.find("2");
     EXPECT_EQ(f, sub.end());
