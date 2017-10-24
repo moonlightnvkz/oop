@@ -1,0 +1,37 @@
+<html>
+<body>
+<pre>
+#include &lt;<font color=3e92a674590>memory</font>&gt;
+#include &lt;<font color=40209c04a68>iostream</font>&gt;
+#include &lt;<font color=462510f93090>fstream</font>&gt;
+#include &lt;<font color=17aa77d2a06>sstream</font>&gt;
+#include &quot;../include/Writable.<font color=1563e772a00>h</font>&quot;
+#include &quot;../include/HTMLDecorator.<font color=1563e772a00>h</font>&quot;
+#include &quot;../include/LineDecorator.<font color=1563e772a00>h</font>&quot;
+#include &quot;../include/WordFinder.<font color=1563e772a00>h</font>&quot;
+#include &quot;../include/CppDecorator.<font color=1563e772a00>h</font>&quot;
+#include &quot;../include/CodeReviewDecorator.<font color=1563e772a00>h</font>&quot;
+
+<font color=0000FF>int</font> <font color=4c4149894c87>main</font>() {
+    <font color=4a1a4a51c1a>std</font>::<font color=37be4a8a4b59>ifstream</font> <font color=49828702547>is</font>(&quot;<font color=3d4b3d7616cf>src</font>/main.<font color=ae55d2064>cpp</font>&quot;);
+    <font color=4a1a4a51c1a>std</font>::<font color=8a346543122>stringstream</font> <font color=3cd7437649b0>ss</font>;
+    <font color=4a1a4a51c1a>std</font>::<font color=26ae325c3d47>copy</font>(<font color=4a1a4a51c1a>std</font>::<font color=2be1bbf4136>istreambuf_iterator</font>&lt;<font color=0000FF>char</font>&gt;(<font color=49828702547>is</font>),
+              <font color=4a1a4a51c1a>std</font>::<font color=2be1bbf4136>istreambuf_iterator</font>&lt;<font color=0000FF>char</font>&gt;(),
+              <font color=4a1a4a51c1a>std</font>::<font color=104647bb3454>ostreambuf_iterator</font>&lt;<font color=0000FF>char</font>&gt;(<font color=3cd7437649b0>ss</font>));
+    <font color=4a1a4a51c1a>std</font>::<font color=34201e9f3a32>ofstream</font> <font color=38e139122476>os</font>(&quot;<font color=4c4149894c87>main</font>.<font color=1e1f206a3257>html</font>&quot;);
+    <font color=4a1a4a51c1a>std</font>::<font color=d5ad25172f>shared_ptr</font>&lt;<font color=36393d3b271>IWritable</font>&gt; <font color=184f15444300>writable</font> = <font color=4a1a4a51c1a>std</font>::<font color=38bb73775>make_shared</font>&lt;<font color=4c583f3d3f1f>Writable</font>&gt;(<font color=3cd7437649b0>ss</font>.<font color=355c99d185a>str</font>());
+    <font color=3aa748fa25ad>CodeReviewDecorator</font> <font color=2a532f721b1>decorator</font>(<font color=184f15444300>writable</font>);
+    <font color=2a532f721b1>decorator</font>.<font color=9ab1d4d1024>write</font>(<font color=38e139122476>os</font>);
+//    <font color=4a1a4a51c1a>std</font>::<font color=8a346543122>stringstream</font> <font color=3cd7437649b0>ss</font>;
+//    <font color=3cd7437649b0>ss</font>.<font color=355c99d185a>str</font>(&quot;#include <font color=3aca3ee3d12>word1</font>.<font color=2cce5a1f64>word2</font> 1word-&gt;2word <font color=4a1a4a51c1a>std</font>::<font color=0000FF>namespace</font>&quot;);
+//    <font color=0000FF>bool</font> <font color=259d232c2238>end</font> = <font color=0000FF>false</font>;
+//    <font color=257131a33cfa>WordFinder</font> <font color=367a46b939f5>finder</font>(<font color=3cd7437649b0>ss</font>);
+//    <font color=0000FF>while</font> (!end) {
+//        <font color=0000FF>auto</font> <font color=3e0415323634>res</font> = <font color=367a46b939f5>finder</font>.<font color=343337324f>next</font>(<font color=259d232c2238>end</font>);
+//        <font color=4a1a4a51c1a>std</font>::<font color=3695c7d3174>cout</font> &lt;&lt; <font color=3e0415323634>res</font>.<font color=92323062646>first</font> &lt;&lt; &quot; &quot; &lt;&lt; <font color=4a1a4a51c1a>std</font>::<font color=3b7049b52c10>boolalpha</font> &lt;&lt; <font color=3e0415323634>res</font>.<font color=1a2443562cf2>second</font> &lt;&lt; <font color=4a1a4a51c1a>std</font>::<font color=3e11113015d>endl</font>;
+//    }
+    <font color=0000FF>return</font> 0;
+}
+</pre>
+</body>
+</html>
