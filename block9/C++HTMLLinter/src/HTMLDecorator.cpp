@@ -1,5 +1,5 @@
 #include <sstream>
-#include "HTMLDecorator.h"
+#include "../include/HTMLDecorator.h"
 
 HTMLDecorator::HTMLDecorator(std::shared_ptr<IWritable> writable)
         : IWritableDecorator(std::move(writable)) {

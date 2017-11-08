@@ -2,7 +2,7 @@
 #include <sstream>
 #include <cmath>
 #include <iomanip>
-#include "LineDecorator.h"
+#include "../include/LineDecorator.h"
 
 LineDecorator::LineDecorator(std::shared_ptr<IWritable> writable)
         : IWritableDecorator(std::move(writable)) {

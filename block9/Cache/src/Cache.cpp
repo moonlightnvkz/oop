@@ -1,7 +1,7 @@
 #include <fstream>
 #include <sstream>
 #include <cmath>
-#include "Cache.h"
+#include "../include/Cache.h"
 
 bool FileCache::has(const std::string &key) {
     std::ifstream is(filename(key));

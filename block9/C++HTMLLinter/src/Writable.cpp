@@ -1,5 +1,5 @@
 #include <ostream>
-#include "Writable.h"
+#include "../include/Writable.h"
 
 Writable::Writable(const std::string &text)
         : mText(text) {

@@ -1,6 +1,6 @@
 #include <sstream>
-#include "CppDecorator.h"
-#include "WordFinder.h"
+#include "../include/CppDecorator.h"
+#include "../include/WordFinder.h"
 
 CppDecorator::CppDecorator(std::shared_ptr<IWritable> writable) :
         HTMLDecorator(std::move(writable)) {
@@ -15,14 +15,35 @@ bool CppDecorator::write(std::ostream &out) {
     bool end = false;
     while (!end) {
         auto res = finder.next(end);
-        if (res.second && mKeyWords.find(res.first) != mKeyWords.end()) {
-            out << "<font color=" << mColor << ">" << res.first << "</font>";
-            continue;
+        if (res.second) {
+            if (mKeyWords.find(res.first) != mKeyWords.end()) {
+                out << "<font color=" << mColor << ">" << res.first << "</font>";
+                continue;
+            } else if (mPreprocessor.find(res.first) != mPreprocessor.end()) {
+                out << "<font color=" << mColorPreprocessor << ">" << res.first << "</font>";
+                continue;
+            }
         }
         out << res.first;
     }
     return out ? true : false;
 }
+
+std::unordered_set<std::string> CppDecorator::mPreprocessor = {
+        "#if",
+        "#elif",
+        "#else",
+        "#endif",
+        "#defined",
+        "#ifdef",
+        "#ifndef",
+        "#define",
+        "#undef",
+        "#include",
+        "#line",
+        "#error",
+        "#pragma",
+};
 
 std::unordered_set<std::string> CppDecorator::mKeyWords = {
         "alignas",

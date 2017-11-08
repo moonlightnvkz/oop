@@ -67,24 +67,18 @@ protected:
 
 class NullCache : public BaseCache {
 public:
-    bool has(const std::string &key) override {
-        return false;
-    }
+    bool has(const std::string &key) override { return false; }
 
-    std::string read(const std::string &key) override {
-        return {};
-    }
+    std::string read(const std::string &key) override { return { }; }
 
-    void write(const std::string &key, const std::string &value) override {
-    }
+    void write(const std::string &key, const std::string &value) override { }
 
-    void remove(const std::string &key) override {
-    }
+    void remove(const std::string &key) override { }
 };
 
 class PoorManMemoryCache : public BaseCache {
 public:
-    explicit PoorManMemoryCache(size_t size = 1000)
+    explicit PoorManMemoryCache(size_t size = 100)
             : mSize(size) {
     }
 

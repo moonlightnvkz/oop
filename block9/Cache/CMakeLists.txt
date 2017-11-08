@@ -4,7 +4,7 @@ project(Cache)
 set(CMAKE_CXX_STANDARD 17)
 
 set(SOURCE_FILES main.cpp
-        include/Cache.cpp
+        src/Cache.cpp
         include/Cache.h)
 
 add_subdirectory(lib/googletest)

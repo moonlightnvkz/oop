@@ -1,5 +1,5 @@
 #include <sstream>
-#include "WordFinder.h"
+#include "../include/WordFinder.h"
 
 WordFinder::WordFinder(std::istream &is)
         : mInput(is) {
@@ -21,6 +21,7 @@ std::pair<std::string, bool> WordFinder::next(bool &end) {
                     wordIsEmpty = false;
                 }
                 [[fallthrough]]
+            case '#':       [[fallthrough]]
             case '_':       [[fallthrough]]
             case 'a'...'z': [[fallthrough]]
             case 'A'...'Z':
@@ -36,7 +37,6 @@ std::pair<std::string, bool> WordFinder::next(bool &end) {
                     needToContinue = false;
                 } else {
                     if (std::string(" \t\n,;.()[]{}:\'\"").find(c) != std::string::npos) {
-//                    if (c == ',' || c == ';' || c == '.' || c == '(' || c == ')' || c == ':' || std::isspace(c)) {
                         needToContinue = false;
                     } else {
                         isWord = false;

@@ -15,6 +15,10 @@ protected:
     static std::unordered_set<std::string> mKeyWords;
 
     static constexpr const char * mColor = "0000FF";
+
+    static std::unordered_set<std::string> mPreprocessor;
+
+    static constexpr const char * mColorPreprocessor = "808000";
 };
 
 

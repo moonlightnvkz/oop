@@ -1,7 +1,7 @@
 #include <sstream>
 #include <random>
-#include "CodeReviewDecorator.h"
-#include "WordFinder.h"
+#include "../include/CodeReviewDecorator.h"
+#include "../include/WordFinder.h"
 
 CodeReviewDecorator::CodeReviewDecorator(std::shared_ptr<IWritable> writable)
         : CppDecorator(std::move(writable)) {
@@ -22,6 +22,9 @@ bool CodeReviewDecorator::write(std::ostream &out) {
         if (res.second) {
             if (mKeyWords.find(res.first) != mKeyWords.end()) {
                 out << "<font color=" << mColor << ">" << res.first << "</font>";
+                continue;
+            } else if (mPreprocessor.find(res.first) != mPreprocessor.end()) {
+                out << "<font color=" << mColorPreprocessor << ">" << res.first << "</font>";
                 continue;
             } else if (mColorMap.find(res.first) == mColorMap.end()) {
                 auto R = static_cast<uint16_t>(distribution(generator) * mScale);
